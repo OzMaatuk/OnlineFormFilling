@@ -4,6 +4,7 @@ import logging
 from form_filling.utils import GenerateContentUtils
 from llm_utils import LLMUtils
 from fuzzywuzzy import fuzz
+from playwright.sync_api import Page, ElementHandle
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +23,7 @@ class FormFilling:
         logger.debug(f"No match found for field '{field_name}' in details")
         return None
 
-    def fill_input(self, element, field_name: str, details: dict) -> None:
+    def fill_input(self, element: ElementHandle, field_name: str, details: dict) -> None:
         logger.debug(f"Filling input for field '{field_name}'")
         input_type = element.evaluate("el => el.type")
         logger.debug(f"Input type for field '{field_name}' is '{input_type}'")
@@ -39,7 +40,7 @@ class FormFilling:
         elif input_type == "checkbox":
             self.fill_checkbox(element, field_name)
 
-    def fill_textarea(self, element, field_name: str, details: dict) -> None:
+    def fill_textarea(self, element: ElementHandle, field_name: str, details: dict) -> None:
         logger.debug(f"Filling textarea for field '{field_name}'")
         value = FormFilling.get_value_from_details(field_name, details)
         if not value:
@@ -49,7 +50,7 @@ class FormFilling:
         element.fill(value)
         logger.info(f"Filled textarea '{field_name}' with value '{value}'")
 
-    def fill_select(self, element, details: dict) -> None:
+    def fill_select(self, element: ElementHandle, details: dict) -> None:
         logger.debug("Filling select element")
         options = [opt.text_content() for opt in element.query_selector_all("option")]
         logger.debug(f"Available options: {options}")
@@ -57,7 +58,7 @@ class FormFilling:
         element.select_option(label=chosen_option)
         logger.info(f"Selected option '{chosen_option}' for select element")
 
-    def fill_radio(self, element) -> None:
+    def fill_radio(self, element: ElementHandle) -> None:
         logger.debug("Filling radio element")
         options = element.query_selector_all("input[type='radio']")
         option_labels = [opt.get_attribute("aria-label") for opt in options]
@@ -69,7 +70,7 @@ class FormFilling:
                 logger.info(f"Checked radio option '{chosen_option}'")
                 break
 
-    def fill_checkbox(self, element, field_name: str) -> None:
+    def fill_checkbox(self, element: ElementHandle, field_name: str) -> None:
         logger.debug(f"Filling checkbox for field '{field_name}'")
         value = self.content_utils.generate_field_content(field_name)
         if value:
@@ -80,7 +81,7 @@ class FormFilling:
             logger.info(f"Unchecked checkbox '{field_name}'")
 
     @staticmethod
-    def handle_file_upload(page, element, resume_path: str) -> None:
+    def handle_file_upload(page: Page, element: ElementHandle, resume_path: str) -> None:
         logger.debug(f"Handling file upload for path '{resume_path}'")
         with page.expect_file_chooser() as fc_info:
             element.click()
