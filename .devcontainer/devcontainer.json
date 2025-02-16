@@ -1,0 +1,28 @@
+{
+    "name": "python_playwright_online_form_filling",
+    "build": {
+        "context": "..",
+        "dockerfile": "../Dockerfile"
+    },
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "python.defaultInterpreterPath": "/usr/bin/python",
+                "python.testing.pytestEnabled": true,
+                "terminal.integrated.cwd": "/workspace"
+            },
+            "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-vscode-remote.remote-containers"
+            ]
+        }
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/git:1": {},
+        "ghcr.io/devcontainers/features/common-utils:2.5.2": {}
+    },
+    "remoteUser": "vscode",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+    "workspaceFolder": "/workspace"
+}

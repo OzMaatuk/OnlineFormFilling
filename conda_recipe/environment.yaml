@@ -1,0 +1,8 @@
+# environment.yaml
+
+name: online_form_filling
+channels:
+  - defaults
+dependencies:
+  - python
+  - pip

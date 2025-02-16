@@ -1,0 +1,7 @@
+.vscode
+.env
+dist
+__pycache__
+online_form_filling.egg-info
+.pytest_cache
+*.log

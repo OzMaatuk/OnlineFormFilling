@@ -1,0 +1,16 @@
+# File path: requirements.txt
+
+# Core Libraries
+playwright
+
+# Configuration
+python-dotenv
+configparser
+
+# Utilities
+pypdf
+llm_utils @ git+https://github.com/OzMaatuk/LLMUtils.git
+
+# Testing
+pytest
+pytest-mock
