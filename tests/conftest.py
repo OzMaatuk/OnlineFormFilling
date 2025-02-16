@@ -9,13 +9,8 @@ import configparser
 from typing import Generator
 from socketserver import TCPServer
 from http.server import SimpleHTTPRequestHandler
-from dotenv import load_dotenv
-
 from playwright.sync_api import sync_playwright, BrowserContext, Page
-
-from src.utils.parser import Parser
-from src.utils.agentql_service import AgentQLService
-from src.pages.login import LoginPage
+from dotenv import load_dotenv
 
 
 logger = logging.getLogger(__name__)
@@ -46,7 +41,7 @@ def load_env():
 
 @pytest.fixture(scope="session")
 def web_server() -> Generator[None, None, None]:
-    site_dir = os.path.join(os.getcwd(), 'data/tests/example_site')
+    site_dir = os.path.join(os.getcwd(), 'tests/')
     handler = SimpleHTTPRequestHandler
     handler.directory = site_dir
     httpd = TCPServer(("localhost", 8000), handler)
@@ -85,10 +80,10 @@ def playwright_browser(playwright_instance) -> Generator[BrowserContext, None, N
         raise
 
 @pytest.fixture(scope="function")
-def playwright_page(playwright_browser: BrowserContext) -> Generator[Page, None, None]:
+def form_page(playwright_browser: BrowserContext) -> Generator[Page, None, None]:
     page = playwright_browser.new_page()
     logger.info("Navigating to test page...")
-    page.goto("http://127.0.0.1:8000/data/tests/example_site/")
+    page.goto("http://127.0.0.1:8000/")
     logger.info("Test page loaded successfully.")
     yield page
     page.close()
