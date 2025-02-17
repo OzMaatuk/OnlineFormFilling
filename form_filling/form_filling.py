@@ -17,11 +17,12 @@ class FormFilling:
     @staticmethod
     def get_value_from_details(field_name: str, details: dict) -> str:
         logger.debug(f"Searching for value matching field '{field_name}' in details: {details}")
-        for key, value in details.items():
-            if fuzz.partial_ratio(field_name.lower(), key.lower()) > 80:
-                logger.debug(f"Matched field '{field_name}' with detail key '{key}' and value '{value}'")
-                return value
-        logger.debug(f"No match found for field '{field_name}' in details")
+        if details:
+            for key, value in details.items():
+                if fuzz.partial_ratio(field_name.lower(), key.lower()) > 80:
+                    logger.debug(f"Matched field '{field_name}' with detail key '{key}' and value '{value}'")
+                    return value
+            logger.debug(f"No match found for field '{field_name}' in details")
         return None
 
     def fill_element(self, element: ElementHandle, field_name: str = None, details: dict = None) -> None:
