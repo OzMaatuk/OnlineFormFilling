@@ -11,6 +11,7 @@ configparser
 pypdf
 llm_utils @ git+https://github.com/OzMaatuk/LLMUtils.git
 fuzzywuzzy
+python-Levenshtein
 
 # Testing
 pytest
