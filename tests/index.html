@@ -1,4 +1,3 @@
-<!-- filepath: tests/form_test.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,21 +6,60 @@
     <title>Form Test Page</title>
 </head>
 <body>
+    <h1>Test Form</h1>
     <form id="test-form">
-        <input id="email" type="email" placeholder="Enter your email">
-        <input id="phone" type="tel" placeholder="Enter your phone number">
-        <textarea id="bio" placeholder="Enter your bio"></textarea>
-        <select id="country">
-            <option value="us">United States</option>
-            <option value="ca">Canada</option>
-            <option value="uk">United Kingdom</option>
-        </select>
-        <input type="radio" id="gender_male" name="gender" value="male">
-        <label for="gender_male">Male</label>
-        <input type="radio" id="gender_female" name="gender" value="female">
-        <label for="gender_female">Female</label>
-        <input type="checkbox" id="subscribe" name="subscribe">
-        <label for="subscribe">Subscribe to newsletter</label>
+        <div>
+            <label for="email">Email:</label>
+            <input id="email" type="email" placeholder="Enter your email">
+        </div>
+        
+        <div>
+            <label for="phone">Phone:</label>
+            <input id="phone" type="tel" placeholder="Enter your phone number">
+        </div>
+        
+        <div>
+            <label for="bio">Biography:</label>
+            <textarea id="bio" placeholder="Enter your bio"></textarea>
+        </div>
+        
+        <div>
+            <label for="country">Country:</label>
+            <select id="country">
+                <option value="us">United States</option>
+                <option value="ca">Canada</option>
+                <option value="uk">United Kingdom</option>
+            </select>
+        </div>
+        
+        <div role="radiogroup" aria-labelledby="gender-group-label">
+            <p id="gender-group-label">Gender:</p>
+            <input type="radio" id="gender_male" name="gender" value="male" aria-label="Male">
+            <label for="gender_male">Male</label>
+            
+            <input type="radio" id="gender_female" name="gender" value="female" aria-label="Female">
+            <label for="gender_female">Female</label>
+            
+            <input type="radio" id="gender_other" name="gender" value="other" aria-label="Other">
+            <label for="gender_other">Other</label>
+            
+            <input type="radio" id="gender_prefer_not_to_say" name="gender" value="prefer_not_to_say" aria-label="Prefer not to say">
+            <label for="gender_prefer_not_to_say">Prefer not to say</label>
+        </div>
+        
+        <div>
+            <input type="checkbox" id="subscribe" name="subscribe">
+            <label for="subscribe">Subscribe to newsletter</label>
+        </div>
+        
+        <div>
+            <label for="resume">Upload Resume:</label>
+            <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx">
+        </div>
+        
+        <div>
+            <button type="submit">Submit</button>
+        </div>
     </form>
 </body>
 </html>
