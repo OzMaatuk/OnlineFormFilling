@@ -9,8 +9,10 @@ import configparser
 from typing import Generator
 from socketserver import TCPServer
 from http.server import SimpleHTTPRequestHandler
-from playwright.sync_api import sync_playwright, BrowserContext, Page
+from playwright.sync_api import sync_playwright, BrowserContext, Page, ElementHandle
 from dotenv import load_dotenv
+from unittest.mock import MagicMock, patch
+from llm_utils import LLMUtils
 
 
 logger = logging.getLogger(__name__)
@@ -83,7 +85,30 @@ def playwright_browser(playwright_instance) -> Generator[BrowserContext, None, N
 def form_page(playwright_browser: BrowserContext) -> Generator[Page, None, None]:
     page = playwright_browser.new_page()
     logger.info("Navigating to test page...")
-    page.goto("http://127.0.0.1:8000/")
+    page.goto("http://127.0.0.1:8000/tests/index.html")
     logger.info("Test page loaded successfully.")
     yield page
     page.close()
+
+@pytest.fixture
+def mock_llm():
+    return MagicMock(spec=LLMUtils)
+
+@pytest.fixture
+def form_filling(mock_llm):
+    return FormFilling(llm=mock_llm, resume_content=MOCK_RESUME_CONTENT)
+
+@pytest.fixture
+def form_filling_with_path(mock_llm):
+    return FormFilling(llm=mock_llm, resume_path=MOCK_RESUME_PATH)
+
+@pytest.fixture
+def mock_element():
+    element = MagicMock(spec=ElementHandle)
+    element.get_attribute.side_effect = lambda attr: {
+        "name": "test_field",
+        "id": "test_id",
+        "aria-label": "Test Label"
+    }.get(attr)
+    element.evaluate.return_value = "text"
+    return element
