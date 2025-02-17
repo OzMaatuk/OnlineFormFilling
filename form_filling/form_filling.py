@@ -28,16 +28,15 @@ class FormFilling:
         # First check for tag name to identify basic element type
         tag_name = element.evaluate("el => el.tagName").lower()
         
-        if tag_name == "select":
-            return "select-one"
-        elif tag_name == "textarea":
-            return "textarea"
-        
         # For input elements, check type attribute
         if tag_name == "input":
             input_type = element.evaluate("el => el.type")
             return input_type
         
+        known_types = ["text", "select", "select-one", "textarea", "radio", "checkbox"]
+        if tag_name in known_types:
+            return tag_name        
+
         # Check for radiogroup role
         role = element.get_attribute("role")
         if role == "radiogroup":
@@ -47,8 +46,7 @@ class FormFilling:
         if element.query_selector("input[type='checkbox']"):
             return "checkbox-container"
             
-        # Default to text for unknown types
-        return "text"
+        raise Exception(f"Cannot determine element type. {element}")
 
     def fill_element(self, element: ElementHandle, field_name: str = None, details: dict = None) -> None:
         if not field_name:
@@ -72,6 +70,7 @@ class FormFilling:
             "checkbox": self._fill_checkbox,
             "textarea": self._fill_text,
             "select-one": self._fill_select,
+            "select": self._fill_select,
             "radiogroup": self._fill_radiogroup,
             "checkbox-container": self._fill_checkbox_container,
             "file": self._fill_file
@@ -132,12 +131,13 @@ class FormFilling:
         logger.info(f"Selected option '{chosen_option}' for select element '{field_name}'")
 
     def _fill_radio(self, element: ElementHandle, field_name: str, value: str) -> None:
-        if value:
-            element.check()
+        label = element.get_attribute("aria-label") or element.get_attribute("value")
+        option_labels = f"[{label}, None]"
+        chosen_option = value or self.content_utils.generate_radio_content(option_labels)
+        if chosen_option != "None":
+            element.click()
             logger.info(f"Checked radio button '{field_name}' with value '{value}'")
-        else:
-            logger.warning(f"No value provided for radio button '{field_name}'")
-
+    
     def _fill_radiogroup(self, element: ElementHandle, field_name: str, value: str) -> None:
         radio_buttons = element.query_selector_all("input[type='radio']")
         option_labels = []
