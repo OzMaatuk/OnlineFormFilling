@@ -13,6 +13,7 @@ from playwright.sync_api import sync_playwright, BrowserContext, Page, ElementHa
 from dotenv import load_dotenv
 from unittest.mock import MagicMock, patch
 from llm_utils import LLMUtils
+from form_filling.form_filling import FormFilling
 
 
 logger = logging.getLogger(__name__)
@@ -94,13 +95,18 @@ def form_page(playwright_browser: BrowserContext) -> Generator[Page, None, None]
 def mock_llm():
     return MagicMock(spec=LLMUtils)
 
+# Constants for tests
+MOCK_RESUME_CONTENT = """
+John Doe
+john.doe@example.com
+(123) 456-7890
+Software Engineer with 5 years of experience
+"""
+MOCK_RESUME_PATH = "data/personal/resume.pdf"
+
 @pytest.fixture
 def form_filling(mock_llm):
     return FormFilling(llm=mock_llm, resume_content=MOCK_RESUME_CONTENT)
-
-@pytest.fixture
-def form_filling_with_path(mock_llm):
-    return FormFilling(llm=mock_llm, resume_path=MOCK_RESUME_PATH)
 
 @pytest.fixture
 def mock_element():
