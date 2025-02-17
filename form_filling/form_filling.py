@@ -32,11 +32,6 @@ class FormFilling:
         input_type = element.evaluate("el => el.type")
         logger.debug(f"Element type for field '{field_name}' is '{input_type}'")
         value = FormFilling.get_value_from_details(field_name, details)
-        if not value:
-            field_label = element.get_attribute("aria-label") or field_name
-            logger.debug(f"Generating content for field '{field_name}' with label '{field_label}'")
-            value = self.content_utils.generate_field_content(field_label)
-            logger.info(f"Generated content for field '{field_name}': '{value}'")
         
         fill_methods = {
             "text": self._fill_text,
@@ -47,30 +42,28 @@ class FormFilling:
             "password": self._fill_text,
             "radio": self._fill_radio,
             "checkbox": self._fill_checkbox,
-            "textarea": self._fill_textarea,
+            "textarea": self._fill_text,
             "select-one": self._fill_select
         }
         
         fill_method = fill_methods.get(input_type, self._fill_text)
         logger.debug(f"Using fill method '{fill_method.__name__}' for field '{field_name}'")
-        fill_method(element, field_name, value, details)
+        fill_method(element, field_name, value)
 
-    def _fill_text(self, element: ElementHandle, field_name: str, value: str, details: dict) -> None:
+    def _fill_text(self, element: ElementHandle, field_name: str, value: str) -> None:
+        if not value:
+            value = self.content_utils.generate_field_content(field_label=field_name)
         element.fill(value)
         logger.info(f"Filled text field '{field_name}' with value '{value}'")
 
-    def _fill_textarea(self, element: ElementHandle, field_name: str, value: str, details: dict) -> None:
-        element.fill(value)
-        logger.info(f"Filled textarea '{field_name}' with value '{value}'")
-
-    def _fill_select(self, element: ElementHandle, field_name: str, value: str, details: dict) -> None:
+    def _fill_select(self, element: ElementHandle, field_name: str, value: str) -> None:
         options = [opt.text_content() for opt in element.query_selector_all("option")]
         logger.debug(f"Available options for select field '{field_name}': {options}")
         chosen_option = value or self.content_utils.generate_select_content(options)
         element.select_option(label=chosen_option)
         logger.info(f"Selected option '{chosen_option}' for select element '{field_name}'")
 
-    def _fill_radio(self, element: ElementHandle, field_name: str, value: str, details: dict) -> None:
+    def _fill_radio(self, element: ElementHandle, field_name: str, value: str) -> None:
         options = element.query_selector_all("input[type='radio']")
         option_labels = [opt.get_attribute("aria-label") for opt in options]
         logger.debug(f"Available radio options for field '{field_name}': {option_labels}")
@@ -81,7 +74,7 @@ class FormFilling:
                 logger.info(f"Checked radio option '{chosen_option}' for field '{field_name}'")
                 return
 
-    def _fill_checkbox(self, element: ElementHandle, field_name: str, value: str, details: dict) -> None:
+    def _fill_checkbox(self, element: ElementHandle, field_name: str, value: str) -> None:
         if value:
             element.check()
             logger.info(f"Checked checkbox '{field_name}'")
