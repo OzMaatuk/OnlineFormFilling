@@ -154,14 +154,16 @@ class FormFilling:
         for radio in radio_buttons:
             label = radio.get_attribute("aria-label") or radio.get_attribute("value")
             if label and label == chosen_option:
-                radio.check()
-                logger.info(f"Checked radio option '{chosen_option}' for field '{field_name}'")
+                # Use the existing _fill_radio method for better encapsulation
+                radio_field_name = f"{field_name} - {label}"
+                self._fill_radio(radio, radio_field_name, "true")
                 return
                 
         logger.warning(f"Failed to find radio option '{chosen_option}' in group '{field_name}'")
 
     def _fill_checkbox(self, element: ElementHandle, field_name: str, value: str) -> None:
-        if value and value.lower() in ["true", "yes", "1", "on"]:
+        should_check = value and value.lower() in ["true", "yes", "1", "on"]
+        if should_check:
             element.check()
             logger.info(f"Checked checkbox '{field_name}'")
         else:
@@ -170,15 +172,23 @@ class FormFilling:
 
     def _fill_checkbox_container(self, element: ElementHandle, field_name: str, value: str) -> None:
         checkboxes = element.query_selector_all("input[type='checkbox']")
-        if value and len(checkboxes) > 0:
-            for checkbox in checkboxes:
-                cb_label = checkbox.get_attribute("aria-label") or checkbox.get_attribute("value") or checkbox.get_attribute("id")
-                if cb_label and fuzz.partial_ratio(value.lower(), cb_label.lower()) > 80:
-                    checkbox.check()
-                    logger.info(f"Checked checkbox '{cb_label}' in container '{field_name}'")
-                    return
-        else:
-            logger.warning(f"No checkbox found in container '{field_name}' matching value '{value}'")
+        if not value:
+            logger.warning(f"No value provided for checkbox container '{field_name}'")
+            return
+            
+        if len(checkboxes) == 0:
+            logger.warning(f"No checkboxes found in container '{field_name}'")
+            return
+            
+        for checkbox in checkboxes:
+            cb_label = checkbox.get_attribute("aria-label") or checkbox.get_attribute("value") or checkbox.get_attribute("id")
+            if cb_label and fuzz.partial_ratio(value.lower(), cb_label.lower()) > 80:
+                # Use the existing _fill_checkbox method for better encapsulation
+                checkbox_field_name = f"{field_name} - {cb_label}"
+                self._fill_checkbox(checkbox, checkbox_field_name, "true")
+                return
+                
+        logger.warning(f"No checkbox found in container '{field_name}' matching value '{value}'")
 
     def _fill_file(self, element: ElementHandle, field_name: str, value: str) -> None:
         resume_path = value or self.content_utils.resume_path
