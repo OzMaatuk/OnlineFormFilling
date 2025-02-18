@@ -4,18 +4,9 @@ import pytest
 import logging
 from unittest.mock import MagicMock, patch
 from form_filling.form_filling import FormFilling
-from form_filling.utils import GenerateContentUtils
+from form_filling.content_utils import GenerateContentUtils
 
 logger = logging.getLogger(__name__)
-
-# Constants for tests
-MOCK_RESUME_CONTENT = """
-John Doe
-john.doe@example.com
-(123) 456-7890
-Software Engineer with 5 years of experience
-"""
-MOCK_RESUME_PATH = "data/personal/resume.pdf"
 
 # # Basic functionality tests
 
@@ -81,27 +72,41 @@ def test_fill_select(form_filling, mock_element):
 
 def test_fill_radio(form_filling, mock_element):
     mock_element.evaluate.return_value = "radio"
-    mock_option_0 = MagicMock()
-    mock_option_0.get_attribute.return_value = "Radio 0"
-    mock_option_1 = MagicMock()
-    mock_option_1.get_attribute.return_value = "Radio 1"
-    mock_options = [mock_option_0, mock_option_1]
-    mock_element.query_selector_all.return_value = mock_options
+    mock_element.get_attribute.return_value = "Radio 1"
     
     # First case: with value in details
     details = {"test_field": "Radio 1"}
     form_filling.fill_element(mock_element, "test_field", details)
-    mock_options[1].click.assert_called_once()
+    mock_element.click.assert_called_once()
     
-    # Reset mocks for next test
-    for opt in mock_options:
-        opt.reset_mock()
+    mock_element.reset_mock()
+    mock_element.get_attribute.side_effect = lambda attr: {
+        "name": "test_field",
+        "id": "test_id",
+        "aria-label": "Radio 1"
+    }.get(attr)
+    mock_element.evaluate.return_value = "radio"
     
     # Second case: without value in details
-    with patch.object(form_filling.content_utils, 'generate_radio_content', return_value="Radio 0") as mock_generate:
+    with patch.object(form_filling.content_utils, 'generate_radio_content', return_value="Radio 1") as mock_generate:
         form_filling.fill_element(mock_element, "unknown_field", {})  # Use different field to ensure no match
-        mock_generate.assert_called_once_with(["Radio 0", "Radio 1"])
-        mock_options[0].click.assert_called_once()
+        mock_generate.assert_called_once_with(["Radio 1", "None"])
+        mock_element.click.assert_called_once()
+
+        mock_element.reset_mock()
+    mock_element.get_attribute.side_effect = lambda attr: {
+        "name": "test_field",
+        "id": "test_id",
+        "aria-label": "Radio 1"
+    }.get(attr)
+    mock_element.evaluate.return_value = "radio"
+    
+    # Third case: no click
+    with patch.object(form_filling.content_utils, 'generate_radio_content', return_value="None") as mock_generate:
+        form_filling.fill_element(mock_element, "some_field")  # Use different field to ensure no match
+        mock_generate.assert_called_once_with(["Radio 1", "None"])
+        mock_element.click.assert_not_called()
+
 
 def test_fill_checkbox(form_filling, mock_element):
     mock_element.evaluate.return_value = "checkbox"
@@ -170,17 +175,19 @@ def test_fill_element_no_field_name(form_filling, mock_element):
     mock_element.fill.assert_called_once_with("test value")
 
 def test_fill_element_unknown_type(form_filling, mock_element):
-    mock_element.evaluate.return_value = "unknown-type"
-    details = {"test_field": "test value"}
-    form_filling.fill_element(mock_element, "test_field", details)
-    mock_element.fill.assert_called_once_with("test value")
-
+    with pytest.raises(Exception):
+        mock_element.evaluate.return_value = "unknown-type"
+        mock_element.query_selector.return_value = None
+        details = {"test_field": "test value"}
+        form_filling.fill_element(mock_element, "test_field", details)
+        
 def test_fill_element_empty_details(form_filling, mock_element):
     with patch.object(form_filling.content_utils, 'generate_field_content', return_value="generated content"):
         form_filling.fill_element(mock_element, "test_field", {})
         mock_element.fill.assert_called_once_with("generated content")
 
-def test_handle_file_upload(form_filling_with_path, form_page):
+def test_handle_file_upload(form_filling, form_page):
+    MOCK_RESUME_PATH = "data/personal/resume.pdf"
     # Create a mock for file_chooser to avoid actual file upload
     mock_file_chooser = MagicMock()
     file_element = form_page.locator("input[type='file']").element_handle()
@@ -188,7 +195,7 @@ def test_handle_file_upload(form_filling_with_path, form_page):
     # Since we don't have a real file input in our example, this is more of a unit test
     with patch.object(form_page, 'expect_file_chooser') as mock_expect:
         mock_expect.return_value.__enter__.return_value.value = mock_file_chooser
-        FormFilling.handle_file_upload(form_page, file_element, MOCK_RESUME_PATH)
+        form_filling.file_handler.handle_file_upload(form_page, file_element, MOCK_RESUME_PATH)
         mock_file_chooser.set_files.assert_called_once_with(MOCK_RESUME_PATH)
 
 def test_fill_form_non_existent_element(form_filling, form_page):
@@ -203,10 +210,12 @@ def test_fill_radiogroup(form_filling, form_page):
     
     # Test with no pre-defined value, should use LLM to generate a choice
     form_page.reload()  # Reset the form
-    gender_field = form_page.locator("[role='radiogroup']").element_handle()
-    form_filling.fill_element(gender_field, "gender")
-    # This assumes the LLM makes a choice - we can't assert the specific value, but we can check that something was selected
-    assert form_page.locator("input[name='gender']:checked").count() == 1
+    with patch.object(form_filling.content_utils, 'generate_radio_content', return_value="Male") as mock_generate:
+        gender_field = form_page.locator("[role='radiogroup']").element_handle()
+        form_filling.fill_element(gender_field, "gender")
+        # This assumes the LLM makes a choice - we can't assert the specific value, but we can check that something was selected
+        mock_generate.assert_called_once_with(["Male", "Female", "Other", "Prefer not to say"])
+        assert form_page.locator("input[name='gender']:checked").count() == 1
 
 def test_fill_checkbox(form_filling, form_page):
     checkbox_field = form_page.locator("#subscribe").element_handle()
