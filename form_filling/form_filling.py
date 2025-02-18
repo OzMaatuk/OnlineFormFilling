@@ -1,4 +1,5 @@
 import logging
+from typing import Optional, Dict, Any
 from fuzzywuzzy import fuzz
 from playwright.sync_api import ElementHandle
 from form_filling.content_utils import GenerateContentUtils
@@ -12,7 +13,9 @@ logger = logging.getLogger(__name__)
 
 class FormFilling:
 
-    def __init__(self, llm: LLMUtils = None, resume_content: str = None, resume_path: str = None):
+    def __init__(self, llm: Optional[LLMUtils] = None, resume_content: Optional[str] = None, 
+                 resume_path: Optional[str] = None):
+        logger.info("Initializing FormFilling with LLM and resume content")
         self.content_utils = GenerateContentUtils(llm, resume_content, resume_path)
         self.llm = llm
         self.resume_path = resume_path
@@ -20,33 +23,41 @@ class FormFilling:
         self.value_evaluator = ValueEvaluator(self.content_utils)
         self.element_handlers = ElementHandlers(self.content_utils)
         self.file_handler = FileHandler()
-        logger.info("Initialized FormFilling with provided LLM and resume content")
+        logger.info("FormFilling initialization complete")
 
     @staticmethod
-    def get_value_from_details(field_name: str, details: dict) -> str:
-        logger.debug(f"Searching for value matching field '{field_name}' in details: {details}")
+    def get_value_from_details(field_name: str, details: Optional[Dict[str, Any]]) -> Optional[str]:
+        """Find a value in the details dictionary that matches the field name"""
+        logger.debug(f"Searching for value matching field '{field_name}' in details dictionary")
         if details:
             for key, value in details.items():
-                if fuzz.partial_ratio(field_name.lower(), key.lower()) > 80:
+                match_score = fuzz.partial_ratio(field_name.lower(), key.lower())
+                logger.debug(f"Match score for '{field_name}' with '{key}': {match_score}")
+                if match_score > 80:
                     logger.debug(f"Matched field '{field_name}' with detail key '{key}' and value '{value}'")
-                    return value
+                    return str(value) if value is not None else None
             logger.debug(f"No match found for field '{field_name}' in details")
         return None
 
-    def fill_element(self, element: ElementHandle, field_name: str = None, details: dict = None) -> None:
+    def fill_element(self, element: ElementHandle, field_name: Optional[str] = None, 
+                    details: Optional[Dict[str, Any]] = None) -> None:
+        """Fill a form element based on its type and the provided details"""
         if not field_name:
             field_name = self.element_utils.determine_field_name(element)
         
-        logger.debug(f"Filling element for field '{field_name}' with details: {details}")
+        logger.info(f"Filling element for field '{field_name}'")
+        logger.debug(f"Details for field '{field_name}': {details}")
         
         element_type = self.element_utils.determine_element_type(element)
         logger.debug(f"Element type for field '{field_name}' is '{element_type}'")
         
         # Get raw value from details
         raw_value = FormFilling.get_value_from_details(field_name, details)
+        logger.debug(f"Raw value for field '{field_name}': {raw_value}")
         
         # Evaluate the value using the centralized method
         value = self.value_evaluator.evaluate_value(element_type, field_name, raw_value, element)
+        logger.debug(f"Evaluated value for field '{field_name}': {value}")
         
         # Handle file uploads separately
         if element_type == "file":
@@ -55,3 +66,4 @@ class FormFilling:
             
         # Fill the element based on its type
         self.element_handlers.fill_element(element, element_type, field_name, value)
+        logger.info(f"Successfully filled element for field '{field_name}'")
