@@ -2,7 +2,6 @@ import logging
 from typing import Optional, Dict, Any
 from fuzzywuzzy import fuzz
 from playwright.sync_api import ElementHandle
-from form_filling.content_utils import GenerateContentUtils
 from llm_utils import LLMUtils
 from form_filling.element_utils import ElementUtils
 from form_filling.value_evaluator import ValueEvaluator
@@ -16,12 +15,11 @@ class FormFilling:
     def __init__(self, llm: Optional[LLMUtils] = None, resume_content: Optional[str] = None, 
                  resume_path: Optional[str] = None):
         logger.info("Initializing FormFilling with LLM and resume content")
-        self.content_utils = GenerateContentUtils(llm, resume_content, resume_path)
         self.llm = llm
         self.resume_path = resume_path
         self.element_utils = ElementUtils()
-        self.value_evaluator = ValueEvaluator(self.content_utils)
-        self.element_handlers = ElementHandlers(self.content_utils)
+        self.value_evaluator = ValueEvaluator(None, llm, resume_content, resume_path)
+        self.element_handlers = ElementHandlers()
         self.file_handler = FileHandler()
         logger.info("FormFilling initialization complete")
 

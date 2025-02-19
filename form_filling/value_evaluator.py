@@ -2,6 +2,7 @@
 
 import logging
 from typing import Optional, List
+from llm_utils import LLMUtils
 from playwright.sync_api import ElementHandle
 from form_filling.content_utils import GenerateContentUtils
 
@@ -9,8 +10,14 @@ logger = logging.getLogger(__name__)
 
 class ValueEvaluator:
     
-    def __init__(self, content_utils: GenerateContentUtils):
-        self.content_utils = content_utils
+    def __init__(self, content_utils: GenerateContentUtils = None,
+                 llm: LLMUtils = None,
+                 resume_content: str = None,
+                resume_path: str = None):
+        if content_utils == None:
+            self.content_utils = GenerateContentUtils(llm, resume_content, resume_path)
+        else:
+            self.content_utils = content_utils
         logger.info("Initialized ValueEvaluator with content utils")
     
     def evaluate_value(self, element_type: str, field_name: str, raw_value: Optional[str], 

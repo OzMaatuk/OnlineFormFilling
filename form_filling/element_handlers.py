@@ -4,14 +4,12 @@ import logging
 from typing import Optional, Dict, Callable
 from fuzzywuzzy import fuzz
 from playwright.sync_api import ElementHandle
-from form_filling.content_utils import GenerateContentUtils
 
 logger = logging.getLogger(__name__)
 
 class ElementHandlers:
     
-    def __init__(self, content_utils: GenerateContentUtils):
-        self.content_utils = content_utils
+    def __init__(self):
         logger.info("Initialized ElementHandlers with content utils")
     
     def fill_element(self, element: ElementHandle, element_type: str, field_name: str, 
