@@ -2,24 +2,25 @@
 
 import os
 import logging
+from form_filling.content_utils import GenerateContentUtils
 import pytest
 import threading
 import time
 import configparser
-from typing import Generator
+from typing import Generator, Any
 from socketserver import TCPServer
 from http.server import SimpleHTTPRequestHandler
-from playwright.sync_api import sync_playwright, BrowserContext, Page, ElementHandle
+from playwright.sync_api import sync_playwright, Page, ElementHandle, Browser
 from dotenv import load_dotenv
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from llm_utils import LLMUtils
 from form_filling.form_filling import FormFilling
 
-
 logger = logging.getLogger(__name__)
 
+
 class ServerThread(threading.Thread):
-    def __init__(self, server):
+    def __init__(self, server: TCPServer):
         super().__init__()
         self.server = server
 
@@ -31,16 +32,19 @@ class ServerThread(threading.Thread):
         print("Shutting down server...")
         self.server.shutdown()
 
+
 @pytest.fixture(scope="session")
-def config():
+def config() -> configparser.ConfigParser:
     config = configparser.ConfigParser()
     config.read('pytest.ini')
     return config
 
+
 @pytest.fixture(scope="session", autouse=True)
-def load_env():
+def load_env() -> Generator[None, None, None]:
     load_dotenv()
     yield
+
 
 @pytest.fixture(scope="session")
 def web_server() -> Generator[None, None, None]:
@@ -59,8 +63,9 @@ def web_server() -> Generator[None, None, None]:
     server_thread.join()
     logger.info("Web server shut down.")
 
+
 @pytest.fixture(scope="session")
-def playwright_instance(web_server) -> Generator:
+def playwright_instance(web_server: Generator[None, None, None]) -> Generator[sync_playwright, None, None]:
     logger.info("Starting Playwright instance...")
     instance = sync_playwright().start()
     yield instance
@@ -68,22 +73,24 @@ def playwright_instance(web_server) -> Generator:
     instance.stop()
     logger.info("Playwright instance stopped.")
 
+
 @pytest.fixture(scope="session")
-def playwright_browser(playwright_instance) -> Generator[BrowserContext, None, None]:
+def playwright_browser(playwright_instance: sync_playwright) -> Generator[Browser, None, None]:
     try:
         logger.info("Launching persistent Playwright browser context...")
-        browser_context = playwright_instance.webkit.launch(headless=False)
+        browser = playwright_instance.webkit.launch(headless=False)
         logger.info("Persistent browser context launched successfully.")
-        yield browser_context
+        yield browser
         logger.info("Closing persistent browser context...")
-        browser_context.close()
+        browser.close()
         logger.info("Persistent browser context closed.")
     except Exception as e:
         logger.error(f"Failed to launch persistent browser context: {e}")
         raise
 
+
 @pytest.fixture(scope="function")
-def form_page(playwright_browser: BrowserContext) -> Generator[Page, None, None]:
+def form_page(playwright_browser: Browser) -> Generator[Page, None, None]:
     page = playwright_browser.new_page()
     logger.info("Navigating to test page...")
     page.goto("http://127.0.0.1:8000/tests/index.html")
@@ -91,25 +98,24 @@ def form_page(playwright_browser: BrowserContext) -> Generator[Page, None, None]
     yield page
     page.close()
 
+
 @pytest.fixture
-def mock_llm():
+def mock_llm() -> MagicMock:
     return MagicMock(spec=LLMUtils)
 
+
 # Constants for tests
-MOCK_RESUME_CONTENT = """
-John Doe
-john.doe@example.com
-(123) 456-7890
-Software Engineer with 5 years of experience
-"""
+MOCK_RESUME_CONTENT = """ John Doe john.doe@example.com (123) 456-7890 Software Engineer with 5 years of experience """
 MOCK_RESUME_PATH = "data/personal/resume.pdf"
 
-@pytest.fixture
-def form_filling(mock_llm):
-    return FormFilling(llm=mock_llm, resume_content=MOCK_RESUME_CONTENT)
 
 @pytest.fixture
-def mock_element():
+def form_filling(mock_llm: MagicMock) -> FormFilling:
+    return FormFilling(llm=mock_llm, resume_content=MOCK_RESUME_CONTENT)
+
+
+@pytest.fixture
+def mock_element() -> MagicMock:
     element = MagicMock(spec=ElementHandle)
     element.get_attribute.side_effect = lambda attr: {
         "name": "test_field",
@@ -118,3 +124,8 @@ def mock_element():
     }.get(attr)
     element.evaluate.return_value = "text"
     return element
+
+
+@pytest.fixture
+def content_utils_fixture(mock_llm: MagicMock) -> GenerateContentUtils:
+    return GenerateContentUtils(mock_llm, MOCK_RESUME_CONTENT)
