@@ -91,3 +91,9 @@ class GenerateContentUtils:
         except Exception as e:
             logger.error(f"Failed to extract text from PDF: {e}")
             raise
+
+    def set_new_resume_from_path(self, resume_path: str):
+        self.resume_content = self.pdf_to_text(resume_path)
+
+    def set_new_resume(self, resume_content: str):
+        self.resume_content = resume_content

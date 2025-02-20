@@ -51,6 +51,9 @@ class FormFilling:
         element_type = self.element_utils.determine_element_type(element)
         logger.debug(f"Element type for field '{field_name}' is '{element_type}'")
         
+        if details["resume_path"] != None and details["resume_path"] != self.resume_path:
+            self.value_evaluator.content_utils.set_new_resume_from_path(details["resume_path"])
+
         # Get raw value from details
         raw_value = FormFilling.get_value_from_details(field_name, details)
         logger.debug(f"Raw value for field '{field_name}': {raw_value}")
