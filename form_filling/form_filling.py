@@ -29,6 +29,8 @@ class FormFilling:
     def get_value_from_details(field_name: str, details: Optional[Dict[str, Any]]) -> Optional[str]:
         """Find a value in the details dictionary that matches the field name"""
         logger.debug(f"Searching for value matching field '{field_name}' in details dictionary")
+        if "resume" in field_name.lower():
+            return details["resume_path"]
         if details:
             for key, value in details.items():
                 match_score = fuzz.partial_ratio(field_name.lower(), key.lower())
@@ -51,7 +53,9 @@ class FormFilling:
         element_type = self.element_utils.determine_element_type(element)
         logger.debug(f"Element type for field '{field_name}' is '{element_type}'")
         
-        if details["resume_path"] != None and details["resume_path"] != self.resume_path:
+        resume_path = details["resume_path"]
+        if resume_path != None and resume_path != self.resume_path:
+            self.resume_path = resume_path
             self.value_evaluator.content_utils.set_new_resume_from_path(details["resume_path"])
 
         # Get raw value from details
@@ -63,7 +67,7 @@ class FormFilling:
         logger.debug(f"Evaluated value for field '{field_name}': {value}")
         
         # Handle file uploads separately
-        if element_type == "file":
+        if element_type == "file" or raw_value == resume_path:
             self.file_handler.handle_file_upload(element.page, element, value or self.resume_path)
             return
             
