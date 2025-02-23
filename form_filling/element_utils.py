@@ -20,7 +20,7 @@ class ElementUtils:
             logger.debug(f"Input element type: {input_type}")
             return input_type
         
-        known_types = ["text", "select", "select-one", "textarea", "radio", "checkbox", "a", "button"]
+        known_types = ["text", "select", "select-one", "textarea", "radio", "checkbox", "a", "button", "label"]
         if tag_name in known_types:
             logger.debug(f"Element has known tag type: {tag_name}")
             return tag_name        
