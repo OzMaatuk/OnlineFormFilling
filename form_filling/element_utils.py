@@ -42,7 +42,7 @@ class ElementUtils:
     def determine_field_name(self, element: ElementHandle) -> str:
         """Extract the most appropriate name for the field from various attributes"""
         # Check common attributes for field name
-        for attr in ["name", "id", "aria-label", "aria-labelledby", "data-testid"]:
+        for attr in ["name", "id", "aria-label", "class", "aria-labelledby", "data-testid"]:
             attr_value = element.get_attribute(attr)
             if attr_value:
                 # If this is a labelledby reference, get the text from the referenced element
