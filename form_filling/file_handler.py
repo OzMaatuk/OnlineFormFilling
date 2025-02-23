@@ -18,7 +18,7 @@ class FileHandler:
         logger.debug(f"Handling file upload for path '{resume_path}'")
         try:
             with page.expect_file_chooser() as fc_info:
-                element.click()
+                element.click(force=True)
             file_chooser = fc_info.value
             file_chooser.set_files(resume_path)
             logger.info(f"Successfully uploaded file '{resume_path}'")
