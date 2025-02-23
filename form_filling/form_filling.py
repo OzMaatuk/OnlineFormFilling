@@ -67,7 +67,7 @@ class FormFilling:
         logger.debug(f"Evaluated value for field '{field_name}': {value}")
         
         # Handle file uploads separately
-        if element_type == "file" or raw_value == resume_path:
+        if raw_value == resume_path:
             self.file_handler.handle_file_upload(element.page, element, value or self.resume_path)
             return
             
