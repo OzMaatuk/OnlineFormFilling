@@ -29,8 +29,12 @@ class FormFilling:
     def get_value_from_details(field_name: str, details: Optional[Dict[str, Any]]) -> Optional[str]:
         """Find a value in the details dictionary that matches the field name"""
         logger.debug(f"Searching for value matching field '{field_name}' in details dictionary")
+        
         if "resume" in field_name.lower():
             return details["resume_path"]
+        if "file" in field_name.lower():
+            return details["resume_path"]
+        
         if details:
             for key, value in details.items():
                 match_score = fuzz.partial_ratio(field_name.lower(), key.lower())
