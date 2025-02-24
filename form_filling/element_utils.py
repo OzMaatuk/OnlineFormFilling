@@ -20,10 +20,25 @@ class ElementUtils:
             logger.debug(f"Input element type: {input_type}")
             return input_type
         
-        known_types = ["text", "select", "select-one", "textarea", "radio", "checkbox", "a", "button", "label"]
+        known_types = ["text", "select", "select-one", "textarea", "radio", "checkbox"]
         if tag_name in known_types:
             logger.debug(f"Element has known tag type: {tag_name}")
             return tag_name        
+
+        if tag_name in ["a", "button", "label"]:
+            logger.debug(f"Element is clickable: {tag_name}")
+            return "clickable"
+
+        # Determine type by other attributes
+        if tag_name == "span":
+            element_id = element.get_attribute("id")
+            element_class = element.get_attribute("class")
+            element_name = element.get_attribute("name")
+            tmp = next((x for x in [element_id, element_class, element_name] if x is not None), None)
+            element_match = next((curr for curr in known_types if curr in tmp), None)
+            if element_match:
+                logger.debug(f"Element type evaluated using id/class/name attribute: {tmp} to {element_match}")
+                return element_match
 
         # Check for radiogroup role
         role = element.get_attribute("role")
