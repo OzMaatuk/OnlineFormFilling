@@ -28,7 +28,8 @@ class ElementHandlers:
             "select-one": self._fill_select,
             "select": self._fill_select,
             "radiogroup": self._fill_radiogroup,
-            "checkbox-container": self._fill_checkbox_container
+            "checkbox-container": self._fill_checkbox_container,
+            "clickable": self._fill_clickable 
         }
         
         fill_method = fill_methods.get(element_type, self._fill_text)
@@ -107,3 +108,8 @@ class ElementHandlers:
                 return
                 
         logger.warning(f"No checkbox found in container '{field_name}' matching value '{value}'")
+
+    def _fill_clickable(self, element: ElementHandle, field_name: str, value: Optional[str] = None) -> None:
+        """Click a clickable element"""
+        element.click(force=True)
+        logger.info(f"Clicked element '{field_name}")
