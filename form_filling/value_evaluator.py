@@ -18,6 +18,7 @@ class ValueEvaluator:
             self.content_utils = GenerateContentUtils(llm, resume_content, resume_path)
         else:
             self.content_utils = content_utils
+        self.known_types = ["text", "email", "tel", "url", "search", "password", "textarea"]
         logger.info("Initialized ValueEvaluator with content utils")
     
     def evaluate_value(self, element_type: str, field_name: str, raw_value: Optional[str], 
@@ -30,7 +31,7 @@ class ValueEvaluator:
             return raw_value
             
         # Handle different element types
-        if element_type in ["text", "email", "tel", "url", "search", "password", "textarea"]:
+        if element_type in self.known_types:
             value = self.content_utils.generate_field_content(field_label=field_name)
             logger.info(f"Generated content for text field '{field_name}'")
             return value
