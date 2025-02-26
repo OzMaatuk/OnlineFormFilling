@@ -39,6 +39,9 @@ class ElementUtils:
             if element_match:
                 logger.debug(f"Element type evaluated using id/class/name attribute: {tmp} to {element_match}")
                 return element_match
+            else:
+                logger.error(f"Cannot determine element typw with tag {tag_name}.\n element: {element}")
+                return tag_name
 
         # Check for radiogroup role
         role = element.get_attribute("role")
