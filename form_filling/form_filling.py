@@ -30,10 +30,11 @@ class FormFilling:
         """Find a value in the details dictionary that matches the field name"""
         logger.debug(f"Searching for value matching field '{field_name}' in details dictionary")
         
-        if "resume" in field_name.lower():
-            return details["resume_path"]
-        if "file" in field_name.lower():
-            return details["resume_path"]
+        if details and details["resume_path"]:
+            if "resume" in field_name.lower():
+                return details["resume_path"]
+            if "file" in field_name.lower():
+                return details["resume_path"]
         
         if details:
             for key, value in details.items():
@@ -45,8 +46,9 @@ class FormFilling:
             logger.debug(f"No match found for field '{field_name}' in details")
         return None
 
-    def fill_element(self, element: ElementHandle, field_name: Optional[str] = None, 
-                    details: Optional[Dict[str, Any]] = None) -> None:
+    def fill_element(self, element: ElementHandle,
+                     field_name: Optional[str] = None, 
+                     details: Optional[Dict[str, Any]] = None) -> None:
         """Fill a form element based on its type and the provided details"""
         if not field_name:
             field_name = self.element_utils.determine_field_name(element)
@@ -57,7 +59,9 @@ class FormFilling:
         element_type = self.element_utils.determine_element_type(element)
         logger.debug(f"Element type for field '{field_name}' is '{element_type}'")
         
-        resume_path = details["resume_path"]
+        resume_path = None
+        if details and "resume_path" in details:
+            resume_path = details["resume_path"]
         if resume_path != None and resume_path != self.resume_path:
             self.resume_path = resume_path
             self.value_evaluator.content_utils.set_new_resume_from_path(details["resume_path"])
@@ -71,7 +75,7 @@ class FormFilling:
         logger.debug(f"Evaluated value for field '{field_name}': {value}")
         
         # Handle file uploads separately
-        if raw_value == resume_path:
+        if resume_path != None and raw_value == resume_path:
             self.file_handler.handle_file_upload(element.page, element, value or self.resume_path)
             return
             
