@@ -1,4 +1,4 @@
-# file path: tests\conftest.py
+# tests\conftest.py
 
 import os
 import logging

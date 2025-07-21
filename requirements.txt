@@ -1,4 +1,4 @@
-# File path: requirements.txt
+# requirements.txt
 
 # Core Libraries
 playwright

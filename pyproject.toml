@@ -1,4 +1,4 @@
-# File path: pyproject.toml
+# pyproject.toml
 
 [build-system]
 requires = ["setuptools", "wheel"]
