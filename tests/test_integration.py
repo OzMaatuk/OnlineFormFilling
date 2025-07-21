@@ -7,33 +7,33 @@ from playwright.sync_api import Page, ElementHandle
 
 def test_fill_form_email_field(form_filling: FormFilling, form_page: Page):
     email_element: ElementHandle = form_page.locator("#email").element_handle()
-    form_filling.fill_element(email_element, "email", {"email": "john.doe@example.com"})
+    form_filling.fill_element(email_element, form_page, "email", {"email": "john.doe@example.com"})
     assert form_page.locator("#email").input_value() == "john.doe@example.com"
 
 def test_fill_form_phone_field(form_filling: FormFilling, form_page: Page):
     phone_element: ElementHandle = form_page.locator("#phone").element_handle()
-    form_filling.fill_element(phone_element, "phone", {"phone": "123-456-7890"})
+    form_filling.fill_element(phone_element, form_page, "phone", {"phone": "123-456-7890"})
     assert form_page.locator("#phone").input_value() == "123-456-7890"
 
 def test_fill_form_textarea(form_filling: FormFilling, form_page: Page):
     bio_element: ElementHandle = form_page.locator("#bio").element_handle()
     bio_text = "Software engineer with 5 years experience in Python development."
-    form_filling.fill_element(bio_element, "bio", {"bio": bio_text})
+    form_filling.fill_element(bio_element, form_page, "bio", {"bio": bio_text})
     assert form_page.locator("#bio").input_value() == bio_text
 
 def test_fill_form_select(form_filling: FormFilling, form_page: Page):
     select_element: ElementHandle = form_page.locator("#country").element_handle()
-    form_filling.fill_element(select_element, "country", {"country": "Canada"})
+    form_filling.fill_element(select_element, form_page, "country", {"country": "Canada"})
     assert form_page.locator("#country").evaluate("el => el.options[el.selectedIndex].text") == "Canada"
 
 def test_fill_form_radio(form_filling: FormFilling, form_page: Page):
     gender_field: ElementHandle = form_page.locator("[role='radiogroup']").element_handle()
-    form_filling.fill_element(gender_field, "gender", {"gender": "Female"})
+    form_filling.fill_element(gender_field, form_page, "gender", {"gender": "Female"})
     assert form_page.locator("#gender_female").is_checked()
 
 def test_fill_form_checkbox(form_filling: FormFilling, form_page: Page):
     checkbox_element: ElementHandle = form_page.locator("#subscribe").element_handle()
-    form_filling.fill_element(checkbox_element, "subscribe", {"subscribe": "true"})
+    form_filling.fill_element(checkbox_element, form_page, "subscribe", {"subscribe": "true"})
     assert form_page.locator("#subscribe").is_checked()
 
 def test_handle_file_upload(form_filling: FormFilling, form_page: Page):

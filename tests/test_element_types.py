@@ -9,7 +9,7 @@ from typing import List
 def test_fill_textarea(form_filling: FormFilling, mock_element: MagicMock):
     mock_element.evaluate.return_value = "textarea"
     details = {"test_field": "This is a long biography text"}
-    form_filling.fill_element(mock_element, "test_field", details)
+    form_filling.fill_element(mock_element, None, "test_field", details)
     mock_element.fill.assert_called_once_with("This is a long biography text")
 
 
@@ -22,14 +22,14 @@ def test_fill_select(form_filling: FormFilling, mock_element: MagicMock):
 
     # First case: with value
     details = {"test_field": "Option 1"}
-    form_filling.fill_element(mock_element, "test_field", details)
+    form_filling.fill_element(mock_element, None, "test_field", details)
     mock_element.select_option.assert_called_once_with(label="Option 1")
     mock_element.reset_mock()
 
     # Second case: without value in details
     with patch.object(form_filling.content_utils, 'generate_select_content',
                       return_value="Option 2") as mock_generate:
-        form_filling.fill_element(mock_element, "different_field")  # Use different field name and empty details
+        form_filling.fill_element(mock_element, None, "different_field")  # Use different field name and empty details
         mock_generate.assert_called_once_with(["Option 0", "Option 1", "Option 2"])
         mock_element.select_option.assert_called_once_with(label="Option 2")
 
@@ -40,7 +40,7 @@ def test_fill_radio(form_filling: FormFilling, mock_element: MagicMock):
 
     # First case: with value in details
     details = {"test_field": "Radio 1"}
-    form_filling.fill_element(mock_element, "test_field", details)
+    form_filling.fill_element(mock_element, None, "test_field", details)
     mock_element.click.assert_called_once()
 
     mock_element.reset_mock()
@@ -54,8 +54,8 @@ def test_fill_radio(form_filling: FormFilling, mock_element: MagicMock):
     # Second case: without value in details
     with patch.object(form_filling.content_utils, 'generate_radio_content',
                       return_value="Radio 1") as mock_generate:
-        form_filling.fill_element(mock_element, "unknown_field", {})  # Use different field to ensure no match
-        mock_generate.assert_called_once_with(["Radio 1", "None"])
+        form_filling.fill_element(mock_element, None, "unknown_field", {})  # Use different field to ensure no match
+        mock_generate.assert_called_once_with(["Radio 1"])
         mock_element.click.assert_called_once()
 
     mock_element.reset_mock()
@@ -69,8 +69,8 @@ def test_fill_radio(form_filling: FormFilling, mock_element: MagicMock):
     # Third case: no click
     with patch.object(form_filling.content_utils, 'generate_radio_content',
                       return_value="None") as mock_generate:
-        form_filling.fill_element(mock_element, "some_field")  # Use different field to ensure no match
-        mock_generate.assert_called_once_with(["Radio 1", "None"])
+        form_filling.fill_element(mock_element, None, "some_field")  # Use different field to ensure no match
+        mock_generate.assert_called_once_with(["Radio 1"])
         mock_element.click.assert_not_called()
 
 
@@ -79,7 +79,7 @@ def test_fill_checkbox(form_filling: FormFilling, mock_element: MagicMock):
 
     # First case: check
     details = {"test_field": "true"}
-    form_filling.fill_element(mock_element, "test_field", details)
+    form_filling.fill_element(mock_element, None, "test_field", details)
     mock_element.check.assert_called_once()
     mock_element.uncheck.assert_not_called()
 
@@ -88,7 +88,7 @@ def test_fill_checkbox(form_filling: FormFilling, mock_element: MagicMock):
 
     # Second case: uncheck (empty value)
     details = {"test_field": ""}
-    form_filling.fill_element(mock_element, "test_field", details)
+    form_filling.fill_element(mock_element, None, "test_field", details)
     mock_element.uncheck.assert_called_once()
     mock_element.check.assert_not_called()
 
@@ -96,21 +96,21 @@ def test_fill_checkbox(form_filling: FormFilling, mock_element: MagicMock):
     mock_element.reset_mock()
 
     # Third case: no value in details - should call generate_field_content
-    form_filling.fill_element(mock_element, "unknown_field", {})
+    form_filling.fill_element(mock_element, None, "unknown_field", {})
     mock_element.uncheck.assert_called_once()
     mock_element.check.assert_not_called()
 
 
 def test_fill_radiogroup(form_filling: FormFilling, form_page: Page):
     gender_field: ElementHandle = form_page.locator("[role='radiogroup']").element_handle()
-    form_filling.fill_element(gender_field, "gender", {"gender": "Female"})
+    form_filling.fill_element(gender_field, form_page, "gender", {"gender": "Female"})
     assert form_page.locator("#gender_female").is_checked()
 
     # Test with no pre-defined value, should use LLM to generate a choice
     form_page.reload()  # Reset the form
     with patch.object(form_filling.content_utils, 'generate_radio_content', return_value="Male") as mock_generate:
         gender_field = form_page.locator("[role='radiogroup']").element_handle()
-        form_filling.fill_element(gender_field, "gender")
+        form_filling.fill_element(gender_field, form_page, "gender")
         # This assumes the LLM makes a choice - we can't assert the specific value, but we can check that something was selected
         mock_generate.assert_called_once_with(["Male", "Female", "Other", "Prefer not to say"])
         assert form_page.locator("input[name='gender']:checked").count() == 1
