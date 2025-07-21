@@ -13,7 +13,7 @@ from http.server import SimpleHTTPRequestHandler
 from playwright.sync_api import sync_playwright, Page, ElementHandle, Browser
 from dotenv import load_dotenv
 from unittest.mock import MagicMock
-from llm_utils import LLMUtils
+from langchain.chat_models import init_chat_model
 from form_filling.form_filling import FormFilling
 
 logger = logging.getLogger(__name__)
@@ -100,8 +100,9 @@ def form_page(playwright_browser: Browser) -> Generator[Page, None, None]:
 
 
 @pytest.fixture
-def mock_llm() -> MagicMock:
-    return MagicMock(spec=LLMUtils)
+def mock_llm() -> object:
+    # You can customize chat_model_config for provider/model
+    return init_chat_model()
 
 
 # Constants for tests
@@ -110,7 +111,7 @@ MOCK_RESUME_PATH = "data/personal/resume.pdf"
 
 
 @pytest.fixture
-def form_filling(mock_llm: MagicMock) -> FormFilling:
+def form_filling(mock_llm: object) -> FormFilling:
     return FormFilling(llm=mock_llm, resume_content=MOCK_RESUME_CONTENT)
 
 
@@ -127,5 +128,5 @@ def mock_element() -> MagicMock:
 
 
 @pytest.fixture
-def content_utils_fixture(mock_llm: MagicMock) -> GenerateContentUtils:
+def content_utils_fixture(mock_llm: object) -> GenerateContentUtils:
     return GenerateContentUtils(mock_llm, MOCK_RESUME_CONTENT)

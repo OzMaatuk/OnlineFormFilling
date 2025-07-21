@@ -2,24 +2,29 @@
 
 from dotenv import load_dotenv
 from playwright.sync_api import sync_playwright
-from llm_utils.manager import LLMUtils
+from langchain.chat_models import init_chat_model
 from form_filling.form_filling import FormFilling
 
 def main():
     load_dotenv()
-    llm = LLMUtils()
+    # Use Ollama Mistral model with temperature=0, following LangChain API
+    llm = init_chat_model(
+        model="mistral",           # Model name
+        model_provider="ollama",   # Provider
+        temperature=0              # Model temperature
+    )
     url = "https://www.comeet.com/jobs/crossriver/C7.00F/would-love-to-join-cross-river/92.F23"
     # url = "https://careers.checkpoint.com/index.php?m=cpcareers&a=show&joborderid=20816&source=51&mode=clear"
     resume_content = None
     resume_path = "data/personal/resume.pdf"
-    
+
     with sync_playwright() as p:
         browser = p.webkit.launch(headless=False)
         page = browser.new_page()
         page.goto(url)
-        
+
         form_filling = FormFilling(llm, resume_content, resume_path)
-        
+
         # page.query_selector("button:has-text('Apply')").click()
 
         # Example of filling an input field
@@ -45,7 +50,7 @@ def main():
                         form_filling.fill_element(textarea_element, element_id)
                 except Exception as e:
                     print(e)
-        
+
         # Example of filling a select element
         select_elements_ids = ["experience", "education"]
         select_elements = page.query_selector_all("select")
@@ -57,7 +62,7 @@ def main():
                         form_filling.fill_element(select_element, element_id)
                 except Exception as e:
                     print(e)
-        
+
         # Example of filling radio buttons
         radio_elements_ids = ["gender", "availability"]
         radio_elements = page.query_selector_all("[role='radiogroup']")
@@ -69,7 +74,7 @@ def main():
                         form_filling.fill_element(radio_element, element_id)
                 except Exception as e:
                     print(e)
-        
+
         # Example of handling file upload
         file_input_elements_ids = ["resume", "coverLetter"]
         file_input_elements = page.query_selector_all("input[type='file']")
@@ -81,7 +86,7 @@ def main():
                         form_filling.handle_file_upload(page, file_input_element, resume_path, element_id)
                 except Exception as e:
                     print(e)
-        
+
         browser.close()
 
 if __name__ == "__main__":

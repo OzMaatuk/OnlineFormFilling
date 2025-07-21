@@ -2,7 +2,7 @@
 
 import logging
 from typing import Optional, List
-from llm_utils import LLMUtils
+from langchain.chat_models import init_chat_model
 from playwright.sync_api import ElementHandle
 from form_filling.content_utils import GenerateContentUtils
 
@@ -11,11 +11,14 @@ logger = logging.getLogger(__name__)
 class ValueEvaluator:
     
     def __init__(self, content_utils: GenerateContentUtils = None,
-                 llm: LLMUtils = None,
+                 llm: object = None,
                  resume_content: str = None,
-                resume_path: str = None):
-        if content_utils == None:
-            self.content_utils = GenerateContentUtils(llm, resume_content, resume_path)
+                 resume_path: str = None,
+                 chat_model_config: Optional[dict] = None):
+        if content_utils is None:
+            if llm is None:
+                llm = init_chat_model(**(chat_model_config or {}))
+            self.content_utils = GenerateContentUtils(llm, resume_content, resume_path, chat_model_config)
         else:
             self.content_utils = content_utils
         self.known_types = ["text", "email", "tel", "url", "search", "password", "textarea"]

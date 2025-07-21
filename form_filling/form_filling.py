@@ -4,7 +4,7 @@ import logging
 from typing import Optional, Dict, Any
 from fuzzywuzzy import fuzz
 from playwright.sync_api import ElementHandle
-from llm_utils import LLMUtils
+from langchain.chat_models import init_chat_model
 from form_filling.element_utils import ElementUtils
 from form_filling.value_evaluator import ValueEvaluator
 from form_filling.element_handlers import ElementHandlers
@@ -14,9 +14,12 @@ logger = logging.getLogger(__name__)
 
 class FormFilling:
 
-    def __init__(self, llm: Optional[LLMUtils] = None, resume_content: Optional[str] = None, 
-                 resume_path: Optional[str] = None):
-        logger.info("Initializing FormFilling with LLM and resume content")
+    def __init__(self, llm: Optional[object] = None, resume_content: Optional[str] = None, 
+                 resume_path: Optional[str] = None, chat_model_config: Optional[dict] = None):
+        logger.info("Initializing FormFilling with LangChain chat model and resume content")
+        if llm is None:
+            # You can pass chat_model_config to customize provider, e.g. {"provider": "openai", "model": "gpt-3.5-turbo"}
+            llm = init_chat_model(**(chat_model_config or {}))
         self.llm = llm
         self.resume_path = resume_path
         self.element_utils = ElementUtils()

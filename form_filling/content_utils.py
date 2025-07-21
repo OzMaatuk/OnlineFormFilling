@@ -1,7 +1,7 @@
 # form_filling/content_utils.py
 
 from typing import Optional, List
-from llm_utils import LLMUtils
+from langchain.chat_models import init_chat_model
 import pypdf
 import logging
 
@@ -9,10 +9,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 class GenerateContentUtils:
-    def __init__(self, llm: Optional[LLMUtils] = None, resume_content: Optional[str] = None, 
-                 resume_path: Optional[str] = None):
+    def __init__(self, llm: Optional[object] = None, resume_content: Optional[str] = None, 
+                 resume_path: Optional[str] = None, chat_model_config: Optional[dict] = None):
         if llm is None:
-            llm = LLMUtils()
+            llm = init_chat_model(**(chat_model_config or {}))
         self.llm = llm
         if resume_path:
             logger.info(f"Loading resume content from file: {resume_path}")
@@ -35,7 +35,7 @@ class GenerateContentUtils:
             if its yes / no quesion, return only yes or no.
             and for any other question, be specific and return only necessary details.
         """
-        response = self.llm.generate_text(instructions)
+        response = self.llm.invoke(instructions)
         logger.debug(f"Generated content for '{field_label}': {response[:50]}...")
         return response
 
@@ -52,7 +52,7 @@ class GenerateContentUtils:
             be positive as I want to get the interview for the job.
             return only the text of the selected option and nothing else.
         """
-        response = self.llm.generate_text(instructions)
+        response = self.llm.invoke(instructions)
         logger.info(f"Selected radio option: {response}")
         return response
 
@@ -69,7 +69,7 @@ class GenerateContentUtils:
             be positive as I want to get the interview for the job.
             return only the text of the selected option and nothing else. 
         """
-        response = self.llm.generate_text(instructions)
+        response = self.llm.invoke(instructions)
         logger.info(f"Selected dropdown option: {response}")
         return response
 
