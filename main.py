@@ -34,8 +34,8 @@ def main():
             for input_element in input_elements:
                 try:
                     element_id = input_element.get_attribute("id")
-                    if any(id_part in element_id for id_part in input_elements_ids):
-                        form_filling.fill_element(input_element, element_id)
+                    if element_id is not None and any(id_part in element_id for id_part in input_elements_ids):
+                        form_filling.fill_element(input_element, page, element_id)
                 except Exception as e:
                     print(e)
 
@@ -46,8 +46,8 @@ def main():
             for textarea_element in textarea_elements:
                 try:
                     element_id = textarea_element.get_attribute("id")
-                    if any(id_part in element_id for id_part in textarea_elements_ids):
-                        form_filling.fill_element(textarea_element, element_id)
+                    if element_id is not None and any(id_part in element_id for id_part in textarea_elements_ids):
+                        form_filling.fill_element(textarea_element, page, element_id)
                 except Exception as e:
                     print(e)
 
@@ -58,8 +58,8 @@ def main():
             for select_element in select_elements:
                 try:
                     element_id = select_element.get_attribute("id")
-                    if any(id_part in element_id for id_part in select_elements_ids):
-                        form_filling.fill_element(select_element, element_id)
+                    if element_id is not None and any(id_part in element_id for id_part in select_elements_ids):
+                        form_filling.fill_element(select_element, page, element_id)
                 except Exception as e:
                     print(e)
 
@@ -70,8 +70,8 @@ def main():
             for radio_element in radio_elements:
                 try:
                     element_id = radio_element.get_attribute("id")
-                    if any(id_part in element_id for id_part in radio_elements_ids):
-                        form_filling.fill_element(radio_element, element_id)
+                    if element_id is not None and any(id_part in element_id for id_part in radio_elements_ids):
+                        form_filling.fill_element(radio_element, page, element_id)
                 except Exception as e:
                     print(e)
 
@@ -82,8 +82,8 @@ def main():
             for file_input_element in file_input_elements:
                 try:
                     element_id = file_input_element.get_attribute("id")
-                    if any(id_part in element_id for id_part in file_input_elements_ids):
-                        form_filling.handle_file_upload(page, file_input_element, resume_path, element_id)
+                    if element_id is not None and any(id_part in element_id for id_part in file_input_elements_ids):
+                        form_filling.file_handler.handle_file_upload(page, file_input_element, resume_path)
                 except Exception as e:
                     print(e)
 

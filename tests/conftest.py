@@ -15,6 +15,7 @@ from dotenv import load_dotenv
 from unittest.mock import MagicMock
 from langchain.chat_models import init_chat_model
 from form_filling.form_filling import FormFilling
+from langchain.chat_models.base import BaseChatModel
 
 logger = logging.getLogger(__name__)
 
@@ -100,10 +101,8 @@ def form_page(playwright_browser: Browser) -> Generator[Page, None, None]:
 
 
 @pytest.fixture
-def mock_llm() -> object:
-    # You can customize chat_model_config for provider/model
-    return init_chat_model()
-
+def mock_llm() -> MagicMock:
+    return MagicMock(spec=BaseChatModel)
 
 # Constants for tests
 MOCK_RESUME_CONTENT = """ John Doe john.doe@example.com (123) 456-7890 Software Engineer with 5 years of experience """
@@ -128,5 +127,5 @@ def mock_element() -> MagicMock:
 
 
 @pytest.fixture
-def content_utils_fixture(mock_llm: object) -> GenerateContentUtils:
+def content_utils_fixture(mock_llm: BaseChatModel) -> GenerateContentUtils:
     return GenerateContentUtils(mock_llm, MOCK_RESUME_CONTENT)
