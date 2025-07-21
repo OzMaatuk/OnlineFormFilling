@@ -7,7 +7,7 @@ import pytest
 import threading
 import time
 import configparser
-from typing import Generator, Any
+from typing import Generator
 from socketserver import TCPServer
 from http.server import SimpleHTTPRequestHandler
 from playwright.sync_api import sync_playwright, Page, ElementHandle, Browser
@@ -65,7 +65,7 @@ def web_server() -> Generator[None, None, None]:
 
 
 @pytest.fixture(scope="session")
-def playwright_instance(web_server: Generator[None, None, None]) -> Generator[sync_playwright, None, None]:
+def playwright_instance(web_server: Generator) -> Generator:
     logger.info("Starting Playwright instance...")
     instance = sync_playwright().start()
     yield instance
@@ -75,7 +75,7 @@ def playwright_instance(web_server: Generator[None, None, None]) -> Generator[sy
 
 
 @pytest.fixture(scope="session")
-def playwright_browser(playwright_instance: sync_playwright) -> Generator[Browser, None, None]:
+def playwright_browser(playwright_instance: Generator) -> Generator[Browser, None, None]:
     try:
         logger.info("Launching persistent Playwright browser context...")
         browser = playwright_instance.webkit.launch(headless=False)

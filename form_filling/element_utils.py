@@ -1,7 +1,6 @@
 # form_filling/element_utils.py
 
 import logging
-from typing import Optional
 from playwright.sync_api import ElementHandle
 
 logger = logging.getLogger(__name__)
@@ -35,7 +34,7 @@ class ElementUtils:
             element_class = element.get_attribute("class")
             element_name = element.get_attribute("name")
             tmp = next((x for x in [element_id, element_class, element_name] if x is not None), None)
-            element_match = next((curr for curr in known_types if curr in tmp), None)
+            element_match = next((curr for curr in known_types if tmp and curr in tmp), None)
             if element_match:
                 logger.debug(f"Element type evaluated using id/class/name attribute: {tmp} to {element_match}")
                 return element_match
