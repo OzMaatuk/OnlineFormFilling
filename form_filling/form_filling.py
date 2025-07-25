@@ -78,7 +78,10 @@ class FormFilling:
         # Get raw value from details
         raw_value = FormFilling.get_value_from_details(field_name, details)
         logger.debug(f"Raw value for field '{field_name}': {raw_value}")
-        
+
+        if element_type == "fieldset":
+            field_name = element.inner_text()
+
         # Evaluate the value using the centralized method
         value = self.value_evaluator.evaluate_value(element_type, field_name, raw_value, element)
         logger.debug(f"Evaluated value for field '{field_name}': {value}")

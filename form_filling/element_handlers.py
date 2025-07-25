@@ -29,7 +29,8 @@ class ElementHandlers:
             "select": self._fill_select,
             "radiogroup": self._fill_radiogroup,
             "checkbox-container": self._fill_checkbox_container,
-            "clickable": self._fill_clickable 
+            "clickable": self._fill_clickable,
+            "fieldset": self._fill_fieldset
         }
         
         fill_method = fill_methods.get(element_type, self._fill_text)
@@ -113,3 +114,19 @@ class ElementHandlers:
         """Click a clickable element"""
         element.click(force=True)
         logger.info(f"Clicked element '{field_name}")
+
+    def _fill_fieldset(self, element: ElementHandle, field_name: str, value: Optional[str]) -> None:
+        """Select the appropriate radio button in a LinkedIn fieldset"""
+        if not value:
+            logger.warning(f"No value provided for fieldset radiogroup '{field_name}'")
+            return
+        radio_buttons = element.query_selector_all("input[data-test-text-selectable-option__input]")
+        logger.debug(f"Found {len(radio_buttons)} radio buttons in fieldset '{field_name}'")
+
+        for radio in radio_buttons:
+            label = radio.get_attribute("data-test-text-selectable-option__input")
+            if label and label == value.strip():
+                radio_field_name = f"{field_name} - {label}"
+                radio.click(force=True)
+                return
+        logger.warning(f"Failed to find radio option '{value}' in fieldset '{field_name}'")

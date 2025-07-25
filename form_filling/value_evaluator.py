@@ -63,17 +63,22 @@ class ValueEvaluator:
                 logger.warning(f"No options found for select field '{field_name}' or content_utils is None")
                 return None
             
-        elif element_type in ["radio", "radiogroup"] and element:
+        elif element_type in ["radio", "radiogroup", "fieldset"] and element:
             option_labels: List[str] = []
             try:
                 if element_type == "radio":
                     label = element.get_attribute("aria-label") or element.get_attribute("value")
                     option_labels = [label] if label is not None else []
                 else:  # radiogroup
-                    radio_buttons = element.query_selector_all("input[type='radio']")
-                    option_labels = [label for rb in radio_buttons for label in [rb.get_attribute("aria-label") or rb.get_attribute("value")] if label is not None]
+                    # Handle both standard and LinkedIn-specific radio groups
+                    radio_buttons = element.query_selector_all("input[type='radio'], input[data-test-text-selectable-option__input]")
+                    option_labels = [rb.get_attribute("data-test-text-selectable-option__input") or 
+                                   rb.get_attribute("aria-label") or 
+                                   rb.get_attribute("value") 
+                                   for rb in radio_buttons]
                 option_labels_filtered: List[str] = [lbl for lbl in option_labels if lbl is not None]
                 logger.debug(f"Radio options for '{field_name}': {option_labels_filtered}")
+
                 if option_labels_filtered and self.content_utils is not None:
                     value = self.content_utils.generate_radio_content(option_labels_filtered)
                     logger.info(f"Generated radio selection '{value}' for field '{field_name}'")
@@ -83,7 +88,7 @@ class ValueEvaluator:
                     return None
             except Exception as e:
                 logger.warning(f"Error getting options for radio field '{field_name}': {e}")
-                return None
+            return None
             
         elif element_type in ["checkbox", "checkbox-container"]:
             # Default to not checked for checkboxes unless specified
