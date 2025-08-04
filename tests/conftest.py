@@ -13,9 +13,10 @@ from http.server import SimpleHTTPRequestHandler
 from playwright.sync_api import sync_playwright, Page, ElementHandle, Browser
 from dotenv import load_dotenv
 from unittest.mock import MagicMock
-from langchain.chat_models import init_chat_model
 from form_filling.form_filling import FormFilling
 from langchain.chat_models.base import BaseChatModel
+from playwright.sync_api._generated import Playwright as SyncPlaywright
+
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +67,7 @@ def web_server() -> Generator[None, None, None]:
 
 
 @pytest.fixture(scope="session")
-def playwright_instance(web_server: Generator) -> Generator:
+def playwright_instance(web_server: Generator) -> Generator[SyncPlaywright, None, None]:
     logger.info("Starting Playwright instance...")
     instance = sync_playwright().start()
     yield instance
@@ -76,10 +77,10 @@ def playwright_instance(web_server: Generator) -> Generator:
 
 
 @pytest.fixture(scope="session")
-def playwright_browser(playwright_instance: Generator) -> Generator[Browser, None, None]:
+def playwright_browser(playwright_instance: SyncPlaywright) -> Generator[Browser, None, None]:
     try:
         logger.info("Launching persistent Playwright browser context...")
-        browser = playwright_instance.webkit.launch(headless=False)
+        browser = playwright_instance.chromium.launch(headless=False)
         logger.info("Persistent browser context launched successfully.")
         yield browser
         logger.info("Closing persistent browser context...")
@@ -110,8 +111,8 @@ MOCK_RESUME_PATH = "data/personal/resume.pdf"
 
 
 @pytest.fixture
-def form_filling(mock_llm: object) -> FormFilling:
-    return FormFilling(llm=mock_llm, resume_content=MOCK_RESUME_CONTENT)
+def form_filling(mock_llm: BaseChatModel | None) -> FormFilling:
+    return FormFilling(mock_llm, MOCK_RESUME_CONTENT)
 
 
 @pytest.fixture

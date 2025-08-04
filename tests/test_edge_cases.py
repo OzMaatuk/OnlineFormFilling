@@ -7,7 +7,8 @@ from form_filling.form_filling import FormFilling
 
 def test_fill_element_no_field_name(form_filling: FormFilling, mock_element: MagicMock):
     details = {"test_id": "test value"}
-    form_filling.fill_element(mock_element, None, None, details)
+    dummy_page = MagicMock()
+    form_filling.fill_element(mock_element, dummy_page, None, details)
     mock_element.fill.assert_called_once_with("test value")
 
 def test_fill_element_unknown_type(form_filling: FormFilling, mock_element: MagicMock):
@@ -15,11 +16,13 @@ def test_fill_element_unknown_type(form_filling: FormFilling, mock_element: Magi
         mock_element.evaluate.return_value = "unknown-type"
         mock_element.query_selector.return_value = None
         details = {"test_field": "test value"}
-        form_filling.fill_element(mock_element, None, "test_field", details)
+        dummy_page = MagicMock()
+        form_filling.fill_element(mock_element, dummy_page, "test_field", details)
 
 def test_fill_element_empty_details(form_filling: FormFilling, mock_element: MagicMock):
-    with patch.object(form_filling.content_utils, 'generate_field_content', return_value="generated content"):
-        form_filling.fill_element(mock_element, None, "test_field", {})
+    dummy_page = MagicMock()
+    with patch.object(form_filling.value_evaluator.content_utils, 'generate_field_content', return_value="generated content"):
+        form_filling.fill_element(mock_element, dummy_page, "test_field", {})
         mock_element.fill.assert_called_once_with("generated content")
 
 def test_fill_form_non_existent_element(form_filling: FormFilling, form_page: Page):
