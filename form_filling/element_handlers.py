@@ -12,8 +12,7 @@ class ElementHandlers:
     def __init__(self):
         logger.info("Initialized ElementHandlers with content utils")
     
-    def fill_element(self, element: ElementHandle, element_type: str, field_name: str, 
-                     value: Optional[str]) -> None:
+    def fill_element(self, element: ElementHandle, element_type: str, field_name: str, value: Optional[str]) -> None:
         """Dispatch to appropriate fill method based on element type"""
         fill_methods: Dict[str, Callable] = {
             "text": self._fill_text,
@@ -120,6 +119,8 @@ class ElementHandlers:
         if not value:
             logger.warning(f"No value provided for fieldset radiogroup '{field_name}'")
             return
+        
+        field_name = element.inner_text()
         radio_buttons = element.query_selector_all("input[data-test-text-selectable-option__input]")
         logger.debug(f"Found {len(radio_buttons)} radio buttons in fieldset '{field_name}'")
 

@@ -1,37 +1,31 @@
 # form_filling/value_evaluator.py
 
 import logging
-from typing import Optional, List
-from langchain.chat_models import init_chat_model
+from typing import Optional, List, Union
 from playwright.sync_api import ElementHandle
 from form_filling.content_utils import GenerateContentUtils
+from langchain.chat_models.base import BaseChatModel
 
 logger = logging.getLogger(__name__)
 
 class ValueEvaluator:
     
-    from langchain.chat_models.base import BaseChatModel
-
-    def __init__(self, content_utils: Optional[GenerateContentUtils] = None,
-                 llm: Optional[BaseChatModel] = None,
-                 resume_content: Optional[str] = None,
-                 resume_path: Optional[str] = None,
-                 chat_model_config: Optional[dict] = None):
+    def __init__(self, content_utils: Optional[GenerateContentUtils] = None, llm: Optional[Union[BaseChatModel, dict]] = None, resume: Optional[str] = None):
+        logger.info(f"Init ValueEvaluator")
+        logger.debug(f"with content_utils: {content_utils}, llm: {llm}, resume: {resume}")
         if content_utils is None:
-            if llm is None:
-                llm = init_chat_model(**(chat_model_config or {}))
-            self.content_utils: Optional[GenerateContentUtils] = GenerateContentUtils(llm, resume_content, resume_path, chat_model_config)
+            self.content_utils: GenerateContentUtils = GenerateContentUtils(llm, resume)
         else:
-            self.content_utils: Optional[GenerateContentUtils] = content_utils
+            self.content_utils: GenerateContentUtils = content_utils
         self.known_types: List[str] = ["text", "email", "tel", "url", "search", "password", "textarea"]
-        logger.info("Initialized ValueEvaluator with content utils")
+        logger.info("ValueEvaluator Initialized")
     
     def evaluate_value(self, element_type: str, field_name: str, raw_value: Optional[str], 
                       element: Optional[ElementHandle] = None) -> Optional[str]:
         """Evaluate and generate appropriate value based on element type and field name"""
         logger.debug(f"Evaluating value for field '{field_name}' of type '{element_type}'")
         
-        if raw_value is not None:
+        if raw_value:
             logger.debug(f"Using provided value '{raw_value}' for field '{field_name}'")
             return raw_value
             
@@ -51,7 +45,7 @@ class ValueEvaluator:
                 option_elements = element.query_selector_all("option")
                 logger.debug(f"Found {len(option_elements)} options for select field '{field_name}'")
                 options_raw = [opt.text_content() for opt in option_elements]
-                options: List[str] = [opt for opt in options_raw if opt is not None]
+                options = [opt for opt in options_raw if opt is not None]
             except Exception as e:
                 logger.warning(f"Error getting options for select field '{field_name}': {e}")
                 return None
@@ -64,6 +58,8 @@ class ValueEvaluator:
                 return None
             
         elif element_type in ["radio", "radiogroup", "fieldset"] and element:
+            if element_type == "fieldset":
+                field_name = element.inner_text()
             option_labels: List[str] = []
             try:
                 if element_type == "radio":
@@ -72,15 +68,15 @@ class ValueEvaluator:
                 else:  # radiogroup
                     # Handle both standard and LinkedIn-specific radio groups
                     radio_buttons = element.query_selector_all("input[type='radio'], input[data-test-text-selectable-option__input]")
-                    option_labels = [rb.get_attribute("data-test-text-selectable-option__input") or 
+                    option_labels_raw = [rb.get_attribute("data-test-text-selectable-option__input") or 
                                    rb.get_attribute("aria-label") or 
                                    rb.get_attribute("value") 
                                    for rb in radio_buttons]
-                option_labels_filtered: List[str] = [lbl for lbl in option_labels if lbl is not None]
-                logger.debug(f"Radio options for '{field_name}': {option_labels_filtered}")
+                    option_labels = [lbl for lbl in option_labels_raw if lbl is not None]
+                logger.debug(f"Radio options for '{field_name}': {option_labels}")
 
-                if option_labels_filtered and self.content_utils is not None:
-                    value = self.content_utils.generate_radio_content(option_labels_filtered)
+                if option_labels and self.content_utils is not None:
+                    value = self.content_utils.generate_radio_content(option_labels)
                     logger.info(f"Generated radio selection '{value}' for field '{field_name}'")
                     return value
                 else:

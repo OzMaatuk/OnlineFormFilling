@@ -19,6 +19,7 @@ langchain-deepseek
 langchain-nvidia-ai-endpoints
 fuzzywuzzy
 python-Levenshtein
+pathvalidate
 
 # Testing
 pytest

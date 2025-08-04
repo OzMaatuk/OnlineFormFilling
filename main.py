@@ -7,23 +7,21 @@ from form_filling.form_filling import FormFilling
 
 def main():
     load_dotenv()
-    # Use Ollama Mistral model with temperature=0, following LangChain API
     llm = init_chat_model(
-        model="mistral",           # Model name
-        model_provider="ollama",   # Provider
-        temperature=0              # Model temperature
+        model="mistral",
+        model_provider="ollama",
+        temperature=0
     )
     url = "https://www.comeet.com/jobs/crossriver/C7.00F/would-love-to-join-cross-river/92.F23"
     # url = "https://careers.checkpoint.com/index.php?m=cpcareers&a=show&joborderid=20816&source=51&mode=clear"
-    resume_content = None
-    resume_path = "data/personal/resume.pdf"
+    resume = "data/personal/resume.pdf"
 
     with sync_playwright() as p:
         browser = p.webkit.launch(headless=False)
         page = browser.new_page()
         page.goto(url)
 
-        form_filling = FormFilling(llm, resume_content, resume_path)
+        form_filling = FormFilling(llm, resume)
 
         # page.query_selector("button:has-text('Apply')").click()
 
@@ -83,7 +81,7 @@ def main():
                 try:
                     element_id = file_input_element.get_attribute("id")
                     if element_id is not None and any(id_part in element_id for id_part in file_input_elements_ids):
-                        form_filling.file_handler.handle_file_upload(page, file_input_element, resume_path)
+                        form_filling.file_handler.handle_file_upload(page, file_input_element, resume)
                 except Exception as e:
                     print(e)
 

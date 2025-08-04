@@ -1,35 +1,33 @@
 # form_filling\form_filling.py
 
 import logging
-from typing import Optional, Dict, Any
+import os.path
+from typing import Optional, Dict, Any, Union
 from fuzzywuzzy import fuzz
 from playwright.sync_api import ElementHandle, Page
-from langchain.chat_models import init_chat_model
 from form_filling.element_utils import ElementUtils
 from form_filling.value_evaluator import ValueEvaluator
 from form_filling.element_handlers import ElementHandlers
 from form_filling.file_handler import FileHandler
-from form_filling.content_utils import GenerateContentUtils
 from langchain.chat_models.base import BaseChatModel
+from pathvalidate import is_valid_filepath
 
 logger = logging.getLogger(__name__)
 
 class FormFilling:
 
-    def __init__(self, llm: Optional[object] = None, resume_content: Optional[str] = None, 
-                 resume_path: Optional[str] = None, chat_model_config: Optional[dict] = None):
+    def __init__(self, llm: Optional[Union[BaseChatModel, dict]] = None, resume: Optional[str] = None):
         logger.info("Initializing FormFilling with LangChain chat model and resume content")
-        if llm is None:
-            llm = init_chat_model(**(chat_model_config or {}))
-        self.llm: Optional[object] = llm
-        self.resume_path: Optional[str] = resume_path
+
+        if isinstance(resume, str):
+            if is_valid_filepath(resume):
+                if not os.path.exists(resume):
+                    raise ValueError(f"Resume file path is invalid: {resume}")
+        else:
+            raise ValueError(f"Resume must be a valid file path or string content, resume: {resume}")
+        self.resume = resume
+        self.value_evaluator = ValueEvaluator(None, llm, resume)
         self.element_utils = ElementUtils()
-        # Ensure llm is of type BaseChatModel or None before passing
-        llm_for_content_utils = llm if isinstance(llm, BaseChatModel) or llm is None else None
-        content_utils = GenerateContentUtils(llm_for_content_utils, resume_content, resume_path, chat_model_config)
-        self.content_utils = content_utils
-        llm_for_evaluator = llm if isinstance(llm, BaseChatModel) or llm is None else None
-        self.value_evaluator = ValueEvaluator(content_utils, llm_for_evaluator, resume_content, resume_path, chat_model_config)
         self.element_handlers = ElementHandlers()
         self.file_handler = FileHandler()
         logger.info("FormFilling initialization complete")
@@ -55,45 +53,41 @@ class FormFilling:
         return None
 
     def fill_element(self, element: ElementHandle,
-                     page: Optional[Page] = None,
+                     page: Page,
                      field_name: Optional[str] = None, 
                      details: Optional[Dict[str, Any]] = None) -> None:
         """Fill a form element based on its type and the provided details"""
+        logger.info(f"Filling element: {element}, field_name: {field_name}")
+        logger.debug(f"Details for filling: {details}")
+        if details is None:
+            details = {}
+
+        element_type = self.element_utils.determine_element_type(element)
+        logger.debug(f"Element type is '{element_type}'")
+
         if not field_name:
             field_name = self.element_utils.determine_field_name(element)
-        logger.info(f"Filling element for field '{field_name}'")
-        logger.debug(f"Details for field '{field_name}': {details}")
-        
-        element_type = self.element_utils.determine_element_type(element)
-        logger.debug(f"Element type for field '{field_name}' is '{element_type}'")
-        resume_path: Optional[str] = None
-        
-        if details and isinstance(details, dict) and "resume_path" in details:
-            resume_path = details["resume_path"]
-        if resume_path is not None and resume_path != self.resume_path:
-            self.resume_path = resume_path
-            if self.value_evaluator is not None and self.value_evaluator.content_utils is not None:
-                self.value_evaluator.content_utils.set_new_resume_from_path(resume_path)
-        
+        logger.debug(f"Filling element for field '{field_name}'")
+
+        resume = details.get("resume_path", None)
+        if resume and resume != self.resume:
+            self.resume = resume
+            if hasattr(self.value_evaluator, "content_utils") and hasattr(self.value_evaluator.content_utils, "set_new_resume"):
+                self.value_evaluator.content_utils.set_new_resume(resume)
+
         # Get raw value from details
         raw_value = FormFilling.get_value_from_details(field_name, details)
         logger.debug(f"Raw value for field '{field_name}': {raw_value}")
 
-        if element_type == "fieldset":
-            field_name = element.inner_text()
+        # If its resume file upload element, handle it and return.
+        if raw_value == self.resume:
+            self.file_handler.handle_file_upload(page, element, self.resume)
+            return
 
         # Evaluate the value using the centralized method
         value = self.value_evaluator.evaluate_value(element_type, field_name, raw_value, element)
         logger.debug(f"Evaluated value for field '{field_name}': {value}")
-        
-        # Handle file uploads separately
-        if resume_path is not None and raw_value == resume_path:
-            if page is not None:
-                self.file_handler.handle_file_upload(page, element, value or self.resume_path)
-            else:
-                logger.error("Page parameter must be provided for file upload.")
-            return
-        
+
         # Fill the element based on its type
         self.element_handlers.fill_element(element, element_type, field_name, value)
         logger.info(f"Successfully filled element for field '{field_name}'")

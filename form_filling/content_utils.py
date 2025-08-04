@@ -1,24 +1,32 @@
 # form_filling/content_utils.py
 
-from typing import Optional, List
-from langchain_core.language_models.chat_models import BaseChatModel
+from typing import Optional, List, Union
+from langchain.chat_models.base import BaseChatModel
 from langchain.chat_models import init_chat_model
 import pypdf
 import logging
+import os.path
+from pathvalidate import is_valid_filepath
 
-# Set up logger
 logger = logging.getLogger(__name__)
 
 class GenerateContentUtils:
-    def __init__(self, llm: Optional[BaseChatModel] = None, resume_content: Optional[str] = None, 
-                 resume_path: Optional[str] = None, chat_model_config: Optional[dict] = None):
-        self.llm: Optional[BaseChatModel] = llm if llm is not None else init_chat_model(**(chat_model_config or {}))
-        if resume_path:
-            logger.info(f"Loading resume content from file: {resume_path}")
-            self.resume_content: Optional[str] = self.pdf_to_text(resume_path)
+    def __init__(self, llm: Optional[Union[BaseChatModel, dict]] = None, resume: Optional[str] = None):
+        """Initialize content utilities with Langchain chat model and resume content"""
+        logger.info("Initialize GenerateContentUtils")
+
+        # self.llm: Optional[BaseChatModel]  # Attribute annotation for type checkers
+        if isinstance(llm, dict):
+            self.llm = init_chat_model(**(llm or {}))
+        elif isinstance(llm, BaseChatModel):
+            self.llm = llm
+        elif llm is None:
+            self.llm = None
         else:
-            logger.info("Using provided resume content")
-            self.resume_content: Optional[str] = resume_content
+            raise ValueError(f"LLM must be a BaseChatModel instance, a configuration dictionary, or None. llm: {llm}")
+
+        self.resume_content: str = GenerateContentUtils.set_new_resume(resume)
+        logger.debug("GenerateContentUtils Initialized")
 
     def generate_field_content(self, field_label: str, resume_content: Optional[str] = None) -> str:
         """Generate appropriate content for a text field based on the resume"""
@@ -105,8 +113,16 @@ class GenerateContentUtils:
             logger.error(f"Failed to extract text from PDF: {e}")
             raise
 
-    def set_new_resume_from_path(self, resume_path: str):
-        self.resume_content = self.pdf_to_text(resume_path)
-
-    def set_new_resume(self, resume_content: str):
-        self.resume_content = resume_content
+    @staticmethod
+    def set_new_resume(resume: Optional[str]) -> str:
+        if isinstance(resume, str):
+            if is_valid_filepath(resume):
+                if not os.path.exists(resume):
+                    raise ValueError(f"Resume file path is invalid: {resume}")
+                logger.debug(f"Loading resume content from file: {resume}")
+                resume = GenerateContentUtils.pdf_to_text(resume)
+            else:
+                logger.debug("Using provided resume content")
+            return resume
+        else:
+            raise ValueError(f"Resume must be a valid file path or string content, resume: {resume}")
