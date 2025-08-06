@@ -37,8 +37,8 @@ class GenerateContentUtils:
             Following the resume below, return the answer for the following question: {field_label}
             \n resume: {resume_content} \n
             give positive answer as I want to get the interview for the job.
-            if its numeric, return only the number.
-            if its yes / no quesion, return only yes or no.
+            if its \"yes / no\" quesion, return only yes or no.
+            if its \"how many\"  question or any request for numeric response, return only number.
             and for any other question, be specific and return only necessary details.
         """
         if self.llm is not None and hasattr(self.llm, "invoke"):
