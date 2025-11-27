@@ -1,5 +1,5 @@
 # Use the Playwright image
-FROM mcr.microsoft.com/playwright/python:v1.53.0-noble
+FROM mcr.microsoft.com/playwright/python:v1.55.0-noble
 
 # Set the working directory in the container
 WORKDIR /workspace

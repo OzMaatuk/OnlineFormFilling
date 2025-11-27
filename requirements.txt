@@ -1,7 +1,7 @@
 # requirements.txt
 
 # Core Libraries
-playwright
+playwright==1.55.0
 
 # Configuration
 python-dotenv
