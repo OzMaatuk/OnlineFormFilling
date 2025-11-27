@@ -10,8 +10,13 @@ from pathvalidate import is_valid_filepath
 
 logger = logging.getLogger(__name__)
 
+
 class GenerateContentUtils:
-    def __init__(self, llm: Optional[Union[BaseChatModel, dict]] = None, resume: Optional[str] = None):
+    def __init__(
+        self,
+        llm: Optional[Union[BaseChatModel, dict]] = None,
+        resume: Optional[str] = None,
+    ):
         """Initialize content utilities with Langchain chat model and resume content"""
         logger.info("Initialize GenerateContentUtils")
 
@@ -23,12 +28,16 @@ class GenerateContentUtils:
         elif llm is None:
             self.llm = None
         else:
-            raise ValueError(f"LLM must be a BaseChatModel instance, a configuration dictionary, or None. llm: {llm}")
+            raise ValueError(
+                f"LLM must be a BaseChatModel instance, a configuration dictionary, or None. llm: {llm}"
+            )
 
         self.resume_content: str = GenerateContentUtils.set_new_resume(resume)
         logger.debug("GenerateContentUtils Initialized")
 
-    def generate_field_content(self, field_label: str, resume_content: Optional[str] = None) -> str:
+    def generate_field_content(
+        self, field_label: str, resume_content: Optional[str] = None
+    ) -> str:
         """Generate appropriate content for a text field based on the resume"""
         if resume_content is None:
             resume_content = self.resume_content
@@ -51,13 +60,19 @@ class GenerateContentUtils:
         logger.debug(f"Generated content for '{field_label}': {response[:50]}...")
         return response
 
-    def generate_radio_content(self, option_labels: List[str], resume_content: Optional[str] = None) -> str:
+    def generate_radio_content(
+        self, option_labels: List[str], resume_content: Optional[str] = None
+    ) -> str:
         """Generate appropriate selection for radio buttons based on resume"""
         if resume_content is None:
             resume_content = self.resume_content
         # Filter out None values
-        option_labels_filtered: List[str] = [label for label in option_labels if label is not None]
-        logger.debug(f"Generating radio selection from options: {option_labels_filtered}")
+        option_labels_filtered: List[str] = [
+            label for label in option_labels if label is not None
+        ]
+        logger.debug(
+            f"Generating radio selection from options: {option_labels_filtered}"
+        )
         instructions = f"""
             Following the resume below, choose the right option: {option_labels_filtered}
             \n resume: {resume_content} \n
@@ -73,7 +88,9 @@ class GenerateContentUtils:
         logger.info(f"Selected radio option: {response}")
         return response
 
-    def generate_select_content(self, options: List[str], resume_content: Optional[str] = None) -> str:
+    def generate_select_content(
+        self, options: List[str], resume_content: Optional[str] = None
+    ) -> str:
         """Generate appropriate selection for dropdown based on resume"""
         if resume_content is None:
             resume_content = self.resume_content
@@ -100,7 +117,7 @@ class GenerateContentUtils:
         """Extract text content from a PDF file"""
         logger.info(f"Converting PDF to text: {pdf_path}")
         try:
-            with open(pdf_path, 'rb') as file:
+            with open(pdf_path, "rb") as file:
                 reader = pypdf.PdfReader(file)
                 text = ""
                 page_count = len(reader.pages)
@@ -126,4 +143,6 @@ class GenerateContentUtils:
                 logger.debug("Using provided resume content")
             return resume
         else:
-            raise ValueError(f"Resume must be a valid file path or string content, resume: {resume}")
+            raise ValueError(
+                f"Resume must be a valid file path or string content, resume: {resume}"
+            )

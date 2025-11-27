@@ -5,13 +5,10 @@ from playwright.sync_api import sync_playwright
 from langchain.chat_models import init_chat_model
 from form_filling.form_filling import FormFilling
 
+
 def main():
     load_dotenv()
-    llm = init_chat_model(
-        model="mistral",
-        model_provider="ollama",
-        temperature=0
-    )
+    llm = init_chat_model(model="mistral", model_provider="ollama", temperature=0)
     url = "https://www.comeet.com/jobs/crossriver/C7.00F/would-love-to-join-cross-river/92.F23"
     # url = "https://careers.checkpoint.com/index.php?m=cpcareers&a=show&joborderid=20816&source=51&mode=clear"
     resume = "data/personal/resume.pdf"
@@ -32,7 +29,9 @@ def main():
             for input_element in input_elements:
                 try:
                     element_id = input_element.get_attribute("id")
-                    if element_id is not None and any(id_part in element_id for id_part in input_elements_ids):
+                    if element_id is not None and any(
+                        id_part in element_id for id_part in input_elements_ids
+                    ):
                         form_filling.fill_element(input_element, page, element_id)
                 except Exception as e:
                     print(e)
@@ -44,7 +43,9 @@ def main():
             for textarea_element in textarea_elements:
                 try:
                     element_id = textarea_element.get_attribute("id")
-                    if element_id is not None and any(id_part in element_id for id_part in textarea_elements_ids):
+                    if element_id is not None and any(
+                        id_part in element_id for id_part in textarea_elements_ids
+                    ):
                         form_filling.fill_element(textarea_element, page, element_id)
                 except Exception as e:
                     print(e)
@@ -56,7 +57,9 @@ def main():
             for select_element in select_elements:
                 try:
                     element_id = select_element.get_attribute("id")
-                    if element_id is not None and any(id_part in element_id for id_part in select_elements_ids):
+                    if element_id is not None and any(
+                        id_part in element_id for id_part in select_elements_ids
+                    ):
                         form_filling.fill_element(select_element, page, element_id)
                 except Exception as e:
                     print(e)
@@ -68,7 +71,9 @@ def main():
             for radio_element in radio_elements:
                 try:
                     element_id = radio_element.get_attribute("id")
-                    if element_id is not None and any(id_part in element_id for id_part in radio_elements_ids):
+                    if element_id is not None and any(
+                        id_part in element_id for id_part in radio_elements_ids
+                    ):
                         form_filling.fill_element(radio_element, page, element_id)
                 except Exception as e:
                     print(e)
@@ -80,12 +85,17 @@ def main():
             for file_input_element in file_input_elements:
                 try:
                     element_id = file_input_element.get_attribute("id")
-                    if element_id is not None and any(id_part in element_id for id_part in file_input_elements_ids):
-                        form_filling.file_handler.handle_file_upload(page, file_input_element, resume)
+                    if element_id is not None and any(
+                        id_part in element_id for id_part in file_input_elements_ids
+                    ):
+                        form_filling.file_handler.handle_file_upload(
+                            page, file_input_element, resume
+                        )
                 except Exception as e:
                     print(e)
 
         browser.close()
+
 
 if __name__ == "__main__":
     main()

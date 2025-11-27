@@ -7,12 +7,19 @@ from playwright.sync_api import ElementHandle
 
 logger = logging.getLogger(__name__)
 
+
 class ElementHandlers:
-    
+
     def __init__(self):
         logger.info("Initialized ElementHandlers with content utils")
-    
-    def fill_element(self, element: ElementHandle, element_type: str, field_name: str, value: Optional[str]) -> None:
+
+    def fill_element(
+        self,
+        element: ElementHandle,
+        element_type: str,
+        field_name: str,
+        value: Optional[str],
+    ) -> None:
         """Dispatch to appropriate fill method based on element type"""
         fill_methods: Dict[str, Callable] = {
             "text": self._fill_text,
@@ -29,20 +36,26 @@ class ElementHandlers:
             "radiogroup": self._fill_radiogroup,
             "checkbox-container": self._fill_checkbox_container,
             "clickable": self._fill_clickable,
-            "fieldset": self._fill_fieldset
+            "fieldset": self._fill_fieldset,
         }
-        
+
         fill_method = fill_methods.get(element_type, self._fill_text)
-        logger.debug(f"Using fill method '{fill_method.__name__}' for field '{field_name}'")
+        logger.debug(
+            f"Using fill method '{fill_method.__name__}' for field '{field_name}'"
+        )
         fill_method(element, field_name, value)
-    
-    def _fill_text(self, element: ElementHandle, field_name: str, value: Optional[str]) -> None:
+
+    def _fill_text(
+        self, element: ElementHandle, field_name: str, value: Optional[str]
+    ) -> None:
         """Fill a text-like input field"""
         actual_value = value or ""
         element.fill(actual_value)
         logger.info(f"Filled text field '{field_name}' with value '{actual_value}'")
 
-    def _fill_select(self, element: ElementHandle, field_name: str, value: Optional[str]) -> None:
+    def _fill_select(
+        self, element: ElementHandle, field_name: str, value: Optional[str]
+    ) -> None:
         """Select an option from a dropdown menu"""
         if value:
             element.select_option(label=value)
@@ -50,33 +63,41 @@ class ElementHandlers:
         else:
             logger.warning(f"No value provided for select field '{field_name}'")
 
-    def _fill_radio(self, element: ElementHandle, field_name: str, value: Optional[str]) -> None:
+    def _fill_radio(
+        self, element: ElementHandle, field_name: str, value: Optional[str]
+    ) -> None:
         """Check a radio button if value indicates it should be selected"""
         if value and value != "None":
             element.click()
             logger.info(f"Checked radio button '{field_name}' with value '{value}'")
         else:
             logger.debug(f"Not checking radio button '{field_name}' (value: {value})")
-    
-    def _fill_radiogroup(self, element: ElementHandle, field_name: str, value: Optional[str]) -> None:
+
+    def _fill_radiogroup(
+        self, element: ElementHandle, field_name: str, value: Optional[str]
+    ) -> None:
         """Select the appropriate radio button in a group"""
         if not value:
             logger.warning(f"No value provided for radiogroup '{field_name}'")
             return
-            
+
         radio_buttons = element.query_selector_all("input[type='radio']")
-        logger.debug(f"Found {len(radio_buttons)} radio buttons in group '{field_name}'")
-        
+        logger.debug(
+            f"Found {len(radio_buttons)} radio buttons in group '{field_name}'"
+        )
+
         for radio in radio_buttons:
             label = radio.get_attribute("aria-label") or radio.get_attribute("value")
             if label and label == value:
                 radio_field_name = f"{field_name} - {label}"
                 self._fill_radio(radio, radio_field_name, "true")
                 return
-                
+
         logger.warning(f"Failed to find radio option '{value}' in group '{field_name}'")
 
-    def _fill_checkbox(self, element: ElementHandle, field_name: str, value: Optional[str]) -> None:
+    def _fill_checkbox(
+        self, element: ElementHandle, field_name: str, value: Optional[str]
+    ) -> None:
         """Check or uncheck a checkbox based on value"""
         should_check = value and value.lower() in ["true", "yes", "1", "on"]
         if should_check:
@@ -86,48 +107,67 @@ class ElementHandlers:
             element.uncheck()
             logger.info(f"Unchecked checkbox '{field_name}'")
 
-    def _fill_checkbox_container(self, element: ElementHandle, field_name: str, value: Optional[str]) -> None:
+    def _fill_checkbox_container(
+        self, element: ElementHandle, field_name: str, value: Optional[str]
+    ) -> None:
         """Find and check the appropriate checkbox in a container"""
         if not value:
             logger.warning(f"No value provided for checkbox container '{field_name}'")
             return
-            
+
         checkboxes = element.query_selector_all("input[type='checkbox']")
         logger.debug(f"Found {len(checkboxes)} checkboxes in container '{field_name}'")
-        
+
         if len(checkboxes) == 0:
             logger.warning(f"No checkboxes found in container '{field_name}'")
             return
-            
+
         for checkbox in checkboxes:
-            cb_label = checkbox.get_attribute("aria-label") or checkbox.get_attribute("value") or checkbox.get_attribute("id")
+            cb_label = (
+                checkbox.get_attribute("aria-label")
+                or checkbox.get_attribute("value")
+                or checkbox.get_attribute("id")
+            )
             if cb_label and fuzz.partial_ratio(value.lower(), cb_label.lower()) > 80:
                 checkbox_field_name = f"{field_name} - {cb_label}"
-                logger.debug(f"Found matching checkbox '{checkbox_field_name}' for value '{value}'")
+                logger.debug(
+                    f"Found matching checkbox '{checkbox_field_name}' for value '{value}'"
+                )
                 self._fill_checkbox(checkbox, checkbox_field_name, "true")
                 return
-                
-        logger.warning(f"No checkbox found in container '{field_name}' matching value '{value}'")
 
-    def _fill_clickable(self, element: ElementHandle, field_name: str, value: Optional[str] = None) -> None:
+        logger.warning(
+            f"No checkbox found in container '{field_name}' matching value '{value}'"
+        )
+
+    def _fill_clickable(
+        self, element: ElementHandle, field_name: str, value: Optional[str] = None
+    ) -> None:
         """Click a clickable element"""
         element.click(force=True)
         logger.info(f"Clicked element '{field_name}")
 
-    def _fill_fieldset(self, element: ElementHandle, field_name: str, value: Optional[str]) -> None:
+    def _fill_fieldset(
+        self, element: ElementHandle, field_name: str, value: Optional[str]
+    ) -> None:
         """Select the appropriate radio button in a LinkedIn fieldset"""
         if not value:
             logger.warning(f"No value provided for fieldset radiogroup '{field_name}'")
             return
-        
+
         field_name = element.inner_text()
-        radio_buttons = element.query_selector_all("input[data-test-text-selectable-option__input]")
-        logger.debug(f"Found {len(radio_buttons)} radio buttons in fieldset '{field_name}'")
+        radio_buttons = element.query_selector_all(
+            "input[data-test-text-selectable-option__input]"
+        )
+        logger.debug(
+            f"Found {len(radio_buttons)} radio buttons in fieldset '{field_name}'"
+        )
 
         for radio in radio_buttons:
             label = radio.get_attribute("data-test-text-selectable-option__input")
             if label and label == value.strip():
-                radio_field_name = f"{field_name} - {label}"
                 radio.click(force=True)
                 return
-        logger.warning(f"Failed to find radio option '{value}' in fieldset '{field_name}'")
+        logger.warning(
+            f"Failed to find radio option '{value}' in fieldset '{field_name}'"
+        )

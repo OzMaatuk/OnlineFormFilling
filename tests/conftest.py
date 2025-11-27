@@ -40,7 +40,7 @@ class ServerThread(threading.Thread):
 @pytest.fixture(scope="session")
 def config() -> configparser.ConfigParser:
     config = configparser.ConfigParser()
-    config.read('pytest.ini')
+    config.read("pytest.ini")
     return config
 
 
@@ -51,8 +51,14 @@ def load_env() -> Generator[None, None, None]:
 
 
 @pytest.fixture(scope="session")
+def headless(config: configparser.ConfigParser) -> bool:
+    """Provides the headless configuration from pytest.ini."""
+    return config.getboolean("general", "headless", fallback=True)
+
+
+@pytest.fixture(scope="session")
 def web_server() -> Generator[None, None, None]:
-    site_dir = os.path.join(os.getcwd(), 'tests/')
+    site_dir = os.path.join(os.getcwd(), "tests/")
     handler = SimpleHTTPRequestHandler
     handler.directory = site_dir
     httpd = TCPServer(("localhost", 8000), handler)
@@ -79,7 +85,9 @@ def playwright_instance(web_server: Generator) -> Generator[SyncPlaywright, None
 
 
 @pytest.fixture(scope="session")
-def playwright_browser(playwright_instance: SyncPlaywright) -> Generator[Browser, None, None]:
+def playwright_browser(
+    playwright_instance: SyncPlaywright, headless: bool
+) -> Generator[Browser, None, None]:
     try:
         logger.info("Launching persistent Playwright browser context...")
         browser = playwright_instance.chromium.launch(headless=False)
@@ -107,6 +115,7 @@ def form_page(playwright_browser: Browser) -> Generator[Page, None, None]:
 def mock_llm() -> MagicMock:
     return MagicMock(spec=BaseChatModel)
 
+
 # Constants for tests
 MOCK_RESUME_CONTENT = """ John Doe john.doe@example.com (123) 456-7890 Software Engineer with 5 years of experience """
 MOCK_RESUME_PATH = "data/personal/resume.pdf"
@@ -123,7 +132,7 @@ def mock_element() -> MagicMock:
     element.get_attribute.side_effect = lambda attr: {
         "name": "test_field",
         "id": "test_id",
-        "aria-label": "Test Label"
+        "aria-label": "Test Label",
     }.get(attr)
     element.evaluate.return_value = "text"
     return element
