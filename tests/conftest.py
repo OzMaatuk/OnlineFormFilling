@@ -49,6 +49,7 @@ def load_env() -> Generator[None, None, None]:
     load_dotenv()
     yield
 
+
 @pytest.fixture(scope="session")
 def headless(config: configparser.ConfigParser) -> bool:
     """Provides the headless configuration from pytest.ini."""
@@ -85,8 +86,7 @@ def playwright_instance(web_server: Generator) -> Generator[SyncPlaywright, None
 
 @pytest.fixture(scope="session")
 def playwright_browser(
-    playwright_instance: SyncPlaywright,
-    headless: bool
+    playwright_instance: SyncPlaywright, headless: bool
 ) -> Generator[Browser, None, None]:
     try:
         logger.info("Launching persistent Playwright browser context...")
