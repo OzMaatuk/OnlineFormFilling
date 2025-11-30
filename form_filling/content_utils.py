@@ -48,8 +48,10 @@ class GenerateContentUtils:
             give positive answer as I want to get the interview for the job.
             if its \"yes / no\" quesion, return only yes or no.
             if its \"how many\"  question or any request for numeric response, return only number.
-            if its simple personal info like \"name\", \"email\", \"phone number\", \"address\", \"linkedin\", \"github\", etc., return only that info. onlt the exact value to be filled.
-            and for any other question, be specific and return only necessary details to be filled.
+            if its simple personal detail like \"first name\", \"last name\", \"email\", \"phone number\", \"address\", \"linkedin\", \"github\", etc., return only the relevant value fom the resume.
+            and for any other question, be specific and return only necessary details.
+            you should act as you are filling job application form, you should answer only with the exact value to be filled.
+            when you cant find the answer in the resume, return \"Not available\".
         """
         if self.llm is not None and hasattr(self.llm, "invoke"):
             response_obj = self.llm.invoke(instructions)
