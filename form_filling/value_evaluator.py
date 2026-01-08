@@ -4,7 +4,7 @@ import logging
 from typing import Optional, List, Union
 from playwright.sync_api import ElementHandle
 from form_filling.content_utils import GenerateContentUtils
-from langchain.chat_models.base import BaseChatModel
+from langchain_core.language_models.chat_models import BaseChatModel
 
 logger = logging.getLogger(__name__)
 

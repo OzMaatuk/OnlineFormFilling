@@ -1,7 +1,7 @@
 # form_filling/content_utils.py
 
 from typing import Optional, List, Union
-from langchain.chat_models.base import BaseChatModel
+from langchain_core.language_models.chat_models import BaseChatModel
 from langchain.chat_models import init_chat_model
 import pypdf
 import logging

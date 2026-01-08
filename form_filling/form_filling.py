@@ -9,7 +9,7 @@ from form_filling.element_utils import ElementUtils
 from form_filling.value_evaluator import ValueEvaluator
 from form_filling.element_handlers import ElementHandlers
 from form_filling.file_handler import FileHandler
-from langchain.chat_models.base import BaseChatModel
+from langchain_core.language_models.chat_models import BaseChatModel
 from pathvalidate import is_valid_filepath
 
 logger = logging.getLogger(__name__)
