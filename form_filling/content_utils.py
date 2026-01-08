@@ -60,7 +60,7 @@ class GenerateContentUtils:
             logger.error("LLM is not initialized or does not have 'invoke' method.")
             response = ""
         logger.debug(f"Generated content for '{field_label}': {response[:50]}...")
-        return response
+        return response.strip()
 
     def generate_radio_content(
         self, option_labels: List[str], resume_content: Optional[str] = None
@@ -88,7 +88,7 @@ class GenerateContentUtils:
             logger.error("LLM is not initialized or does not have 'invoke' method.")
             response = ""
         logger.info(f"Selected radio option: {response}")
-        return response
+        return response.strip()
 
     def generate_select_content(
         self, options: List[str], resume_content: Optional[str] = None
@@ -112,7 +112,7 @@ class GenerateContentUtils:
             logger.error("LLM is not initialized or does not have 'invoke' method.")
             response = ""
         logger.info(f"Selected dropdown option: {response}")
-        return response
+        return response.strip()
 
     @staticmethod
     def pdf_to_text(pdf_path: str) -> str:
