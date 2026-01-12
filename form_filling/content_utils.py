@@ -43,15 +43,19 @@ class GenerateContentUtils:
             resume_content = self.resume_content
         logger.debug(f"Generating content for field: {field_label}")
         instructions = f"""
-            Following the resume below, return the answer for the following question: {field_label}
-            \n resume: {resume_content} \n
+            Following the resume below, return the answer for the following question: {field_label}.
+            \n resume: {resume_content}\n
             give positive answer as I want to get the interview for the job.
+            make answer shortest. 
             if its \"yes / no\" quesion, return only yes or no.
-            if its \"how many\"  question or any request for numeric response, return only number.
-            if its simple personal detail like \"first name\", \"last name\", \"email\", \"phone number\", \"address\", \"linkedin\", \"github\", etc., return only the relevant value fom the resume.
+            if its \"how many\" question or any request for numeric response, return only number.
+            if its \"phone number\" question, return only digits.
+            if its simple personal detail like \"first name\", \"last name\", \"email\", \"address\", \"linkedin\", \"github\", etc., return only the relevant value from the resume, without any additional words or characters.
             and for any other question, be specific and return only necessary details.
             you should act as you are filling job application form, you should answer only with the exact value to be filled.
             when you cant find the answer in the resume, return \"Not available\".
+            do not explain when answer not found in resume, just return \"Not available\".
+            do not include the label in your response.
         """
         if self.llm is not None and hasattr(self.llm, "invoke"):
             response_obj = self.llm.invoke(instructions)
