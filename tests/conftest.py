@@ -53,7 +53,7 @@ def load_env() -> Generator[None, None, None]:
 @pytest.fixture(scope="session")
 def headless(config: configparser.ConfigParser) -> bool:
     """Provides the headless configuration from pytest.ini."""
-    return config.getboolean("general", "headless", fallback=True)
+    return config.getboolean("driver", "headless", fallback=True)
 
 
 @pytest.fixture(scope="session")
