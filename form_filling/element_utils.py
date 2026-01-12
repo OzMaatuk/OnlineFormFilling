@@ -77,57 +77,92 @@ class ElementUtils:
     def determine_field_name(self, element: ElementHandle) -> str:
         """Extract the most appropriate name for the field from various attributes"""
 
-        # Check common attributes for field name
-        for attr in [
-            "name",
-            "id",
-            "aria-label",
-            "class",
-            "aria-labelledby",
-            "data-testid",
-        ]:
+        # First, try direct attributes (most reliable)
+        for attr in ["name", "id", "aria-label", "data-testid"]:
             attr_value = element.get_attribute(attr)
-            if attr_value:
-                # If this is a labelledby reference, get the text from the referenced element
-                if attr == "aria-labelledby":
-                    try:
-                        page = element.page
-                        referenced_element = page.locator(f"#{attr_value}")
-                        label_text = referenced_element.text_content()
-                        if label_text:
-                            name = label_text.strip()
-                            logger.debug(
-                                f"Found field name '{name}' via aria-labelledby reference"
-                            )
-                            return name
-                    except Exception as e:
-                        logger.warning(
-                            f"Failed to get text from aria-labelledby element: {e}"
-                        )
-                else:
-                    logger.debug(
-                        f"Found field name '{attr_value}' via {attr} attribute"
-                    )
-                    return attr_value
+            if attr_value and attr_value.strip():
+                logger.debug(f"Found field name '{attr_value}' via {attr} attribute")
+                return attr_value.strip()
 
-        # Look for an associated label element
-        try:
-            id_value = element.get_attribute("id")
-            if id_value:
+        # Try aria-labelledby reference
+        aria_labelledby = element.get_attribute("aria-labelledby")
+        if aria_labelledby:
+            try:
+                page = element.page
+                referenced_element = page.locator(f"#{aria_labelledby}")
+                label_text = referenced_element.text_content()
+                if label_text and label_text.strip():
+                    name = label_text.strip()
+                    logger.debug(f"Found field name '{name}' via aria-labelledby reference")
+                    return name
+            except Exception as e:
+                logger.warning(f"Failed to get text from aria-labelledby element: {e}")
+
+        # Look for associated label element
+        id_value = element.get_attribute("id")
+        if id_value:
+            try:
                 page = element.page
                 label = page.locator(f"label[for='{id_value}']")
                 if label.count() > 0:
-                    name = label.first.text_content().strip()
-                    logger.debug(f"Found field name '{name}' via associated label")
-                    return name
-        except Exception as e:
-            logger.warning(f"Failed to get text from associated label: {e}")
+                    label_text = label.first.text_content()
+                    if label_text and label_text.strip():
+                        name = label_text.strip()
+                        logger.debug(f"Found field name '{name}' via associated label")
+                        return name
+            except Exception as e:
+                logger.warning(f"Failed to get text from associated label: {e}")
 
-        # Return placeholder text as a fallback
+        # Try to extract meaningful text from parent elements
+        try:
+            # Look for text in immediate parent
+            parent = element.evaluate("el => el.parentElement")
+            if parent:
+                parent_element = element.page.locator("xpath=..").first
+                parent_text = parent_element.inner_text()
+                if parent_text and parent_text.strip():
+                    # Clean up the text - remove common form artifacts
+                    cleaned_text = self._clean_field_name(parent_text.strip())
+                    if cleaned_text and len(cleaned_text) < 100:  # Reasonable length check
+                        logger.debug(f"Found field name '{cleaned_text}' from parent element text")
+                        return cleaned_text
+        except Exception as e:
+            logger.debug(f"Failed to get text from parent element: {e}")
+
+        # Fallback to placeholder
         placeholder = element.get_attribute("placeholder")
-        if placeholder:
+        if placeholder and placeholder.strip():
             logger.debug(f"Using placeholder '{placeholder}' as field name")
-            return placeholder
+            return placeholder.strip()
+
+        # Last resort: try class attribute for meaningful names
+        class_attr = element.get_attribute("class")
+        if class_attr and class_attr.strip():
+            # Look for meaningful class names
+            classes = class_attr.split()
+            for cls in classes:
+                if any(keyword in cls.lower() for keyword in ['name', 'email', 'phone', 'address', 'field']):
+                    logger.debug(f"Using class '{cls}' as field name")
+                    return cls
 
         logger.warning("Could not determine field name, using 'unknown'")
         return "unknown"
+
+    def _clean_field_name(self, text: str) -> str:
+        """Clean and extract meaningful field name from text content"""
+        if not text:
+            return ""
+        
+        # Remove common form artifacts and clean up
+        text = text.replace("*", "").replace(":", "").strip()
+        
+        # If text contains multiple lines, take the first meaningful line
+        lines = [line.strip() for line in text.split('\n') if line.strip()]
+        if lines:
+            # Take the shortest non-empty line (likely the label)
+            text = min(lines, key=len)
+        
+        # Remove extra whitespace
+        text = ' '.join(text.split())
+        
+        return text
