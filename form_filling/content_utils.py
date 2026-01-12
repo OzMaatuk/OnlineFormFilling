@@ -7,6 +7,7 @@ import pypdf
 import logging
 import os.path
 from pathvalidate import is_valid_filepath
+from form_filling.prompts import get_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -42,21 +43,7 @@ class GenerateContentUtils:
         if resume_content is None:
             resume_content = self.resume_content
         logger.debug(f"Generating content for field: {field_label}")
-        instructions = f"""
-            Following the resume below, return the answer for the following question: {field_label}.
-            \n resume: {resume_content}\n
-            give positive answer as I want to get the interview for the job.
-            make answer shortest. 
-            if its \"yes / no\" quesion, return only yes or no.
-            if its \"how many\" question or any request for numeric response, return only number.
-            if its \"phone number\" question, return only digits.
-            if its simple personal detail like \"first name\", \"last name\", \"email\", \"address\", \"linkedin\", \"github\", etc., return only the relevant value from the resume, without any additional words or characters.
-            and for any other question, be specific and return only necessary details.
-            you should act as you are filling job application form, you should answer only with the exact value to be filled.
-            when you cant find the answer in the resume, return \"Not available\".
-            do not explain when answer not found in resume, just return \"Not available\".
-            do not include the label in your response.
-        """
+        instructions = get_prompt(field_label, resume_content)
         if self.llm is not None and hasattr(self.llm, "invoke"):
             response_obj = self.llm.invoke(instructions)
             response = getattr(response_obj, "content", str(response_obj))
@@ -79,12 +66,7 @@ class GenerateContentUtils:
         logger.debug(
             f"Generating radio selection from options: {option_labels_filtered}"
         )
-        instructions = f"""
-            Following the resume below, choose the right option: {option_labels_filtered}
-            \n resume: {resume_content} \n
-            be positive as I want to get the interview for the job.
-            return only the text of the selected option and nothing else.
-        """
+        instructions = get_prompt(str(option_labels_filtered), resume_content)
         if self.llm is not None and hasattr(self.llm, "invoke"):
             response_obj = self.llm.invoke(instructions)
             response = getattr(response_obj, "content", str(response_obj))
@@ -103,12 +85,7 @@ class GenerateContentUtils:
         # Filter out None values
         options_filtered: List[str] = [opt for opt in options if opt is not None]
         logger.debug(f"Generating select option from choices: {options_filtered}")
-        instructions = f"""
-            Following the resume below, select the right option: {options_filtered}
-            \n resume: {resume_content} \n
-            be positive as I want to get the interview for the job.
-            return only the text of the selected option and nothing else. 
-        """
+        instructions = get_prompt(str(options_filtered), resume_content)
         if self.llm is not None and hasattr(self.llm, "invoke"):
             response_obj = self.llm.invoke(instructions)
             response = getattr(response_obj, "content", str(response_obj))
