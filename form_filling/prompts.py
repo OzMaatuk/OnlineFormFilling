@@ -21,16 +21,16 @@ SELECT_FIELD_PROMPT = """
         return only the text of the selected option and nothing else. 
     """
 
-RADIO_FIELD_PROMPT ="""
+RADIO_FIELD_PROMPT = """
         Following the resume below, choose the right option: {field_label}
         \n resume: {resume_content} \n
         be positive as I want to get the interview for the job.
         return only the text of the selected option and nothing else.
     """
 
+
 @staticmethod
 def get_prompt(field_label: str, resume_content: str) -> str:
     return TEXT_FIELD_PROMPT.format(
-        field_label=field_label,
-        resume_content=resume_content
+        field_label=field_label, resume_content=resume_content
     )
