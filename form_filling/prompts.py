@@ -5,27 +5,29 @@ TEXT_FIELD_PROMPT = """
         make answer shortest. 
         if its \"yes / no\" quesion, return only yes or no.
         if its \"how many\" question or any request for numeric response, return only number.
-        if its \"phone number\" question, return only digits.
         if its simple personal detail like \"first name\", \"last name\", \"email\", \"address\", \"linkedin\", \"github\", etc., return only the relevant value from the resume, without any additional words or characters.
         and for any other question, be specific and return only necessary details.
         you should act as you are filling job application form, you should answer only with the exact value to be filled.
         when you cant find the answer in the resume, return \"Not available\".
         do not explain when answer not found in resume, just return \"Not available\".
         do not include the label in your response.
+        response mostly should be one word or short sentence.
     """
 
 SELECT_FIELD_PROMPT = """
-        Following the resume below, select the right option: {field_label}
-        \n resume: {resume_content} \n
-        be positive as I want to get the interview for the job.
-        return only the text of the selected option and nothing else. 
+        Following the resume:
+        {resume_content}.
+        select the right option: {field_label}.
+        be positive as I want to get an interview for the job.
+        return only the text value of the right select option and nothing else. 
     """
 
 RADIO_FIELD_PROMPT = """
-        Following the resume below, choose the right option: {field_label}
-        \n resume: {resume_content} \n
-        be positive as I want to get the interview for the job.
-        return only the text of the selected option and nothing else.
+        Following the resume:
+        {resume_content}.
+        choose the right radio option: {field_label}.
+        be positive as I want to get an interview for the job.
+        return only the numeric value of the right radio option and nothing else.
     """
 
 
