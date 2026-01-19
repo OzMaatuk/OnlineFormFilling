@@ -5,7 +5,7 @@ TEXT_FIELD_PROMPT = """
         make answer shortest. 
         if its \"yes / no\" quesion, return only yes or no.
         if its \"how many\" question or any request for numeric response, return only number.
-        if its \"phone number\" question, return only digits.
+        if its \"phone number\" or \"salary\" question, return only digits.
         if its simple personal detail like \"first name\", \"last name\", \"email\", \"address\", \"linkedin\", \"github\", etc., return only the relevant value from the resume, without any additional words or characters.
         and for any other question, be specific and return only necessary details.
         you should act as you are filling job application form, you should answer only with the exact value to be filled.
