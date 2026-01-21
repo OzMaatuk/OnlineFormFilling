@@ -2,6 +2,7 @@
 Centralized constants for the form filling system.
 All magic numbers and configuration defaults are defined here.
 """
+
 from enum import Enum
 from typing import Final
 
@@ -9,6 +10,7 @@ from typing import Final
 # Logging Constants
 class LogLevel(str, Enum):
     """Enumeration of logging levels."""
+
     DEBUG = "DEBUG"
     INFO = "INFO"
     WARNING = "WARNING"
@@ -18,6 +20,7 @@ class LogLevel(str, Enum):
 
 class LogFormat(str, Enum):
     """Enumeration of log output formats."""
+
     STRUCTURED = "structured"
     JSON = "json"
     PLAIN = "plain"
@@ -51,6 +54,7 @@ MAX_RESUME_SIZE: Final[int] = 10_000_000  # 10MB
 # Element Type Constants
 class ElementType(str, Enum):
     """Enumeration of supported form element types."""
+
     TEXT = "text"
     EMAIL = "email"
     TEL = "tel"
@@ -71,7 +75,11 @@ class ElementType(str, Enum):
 
 # Attribute Names for Field Detection
 FIELD_DETECTION_ATTRIBUTES: Final[tuple] = (
-    "name", "id", "aria-label", "data-testid", "placeholder"
+    "name",
+    "id",
+    "aria-label",
+    "data-testid",
+    "placeholder",
 )
 
 
