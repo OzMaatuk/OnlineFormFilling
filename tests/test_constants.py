@@ -2,7 +2,6 @@
 Unit tests for the constants module.
 Tests that all constants are properly defined and accessible.
 """
-import pytest
 from form_filling.constants import (
     # Enums
     LogLevel,

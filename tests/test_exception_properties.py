@@ -214,10 +214,10 @@ class TestErrorHandlingConsistency:
             assert error.context == context
         
         # But they should be different types
-        assert type(config_error) != type(element_error)
-        assert type(element_error) != type(value_error)
-        assert type(value_error) != type(validation_error)
-        assert type(validation_error) != type(resource_error)
+        assert type(config_error) is not type(element_error)
+        assert type(element_error) is not type(value_error)
+        assert type(value_error) is not type(validation_error)
+        assert type(validation_error) is not type(resource_error)
         
         # And should be catchable by their specific types
         assert isinstance(config_error, ConfigurationError)

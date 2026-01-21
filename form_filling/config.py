@@ -39,7 +39,7 @@ from form_filling.constants import (
     LogLevel,
     LogFormat,
 )
-from form_filling.exceptions import ConfigurationError, ValidationError
+from form_filling.exceptions import ConfigurationError
 
 
 @dataclass
@@ -216,7 +216,7 @@ class LLMConfig:
         
         if self.retry_max_delay < self.retry_base_delay:
             raise ConfigurationError(
-                f"retry_max_delay must be >= retry_base_delay",
+                "retry_max_delay must be >= retry_base_delay",
                 context={
                     "config_key": "retry_max_delay",
                     "config_value": self.retry_max_delay,

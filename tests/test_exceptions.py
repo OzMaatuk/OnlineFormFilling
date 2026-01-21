@@ -4,7 +4,6 @@ Unit tests for the exception hierarchy.
 Tests exception inheritance, context storage, and string representations.
 """
 
-import pytest
 from form_filling.exceptions import (
     FormFillingError,
     ConfigurationError,

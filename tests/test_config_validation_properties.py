@@ -17,7 +17,6 @@ from form_filling.config import (
     LLMConfig,
     PerformanceConfig,
     Configuration,
-    ConfigurationBuilder,
 )
 from form_filling.exceptions import ConfigurationError
 from form_filling.constants import (
