@@ -93,7 +93,9 @@ class ElementUtils:
                 label_text = referenced_element.text_content()
                 if label_text and label_text.strip():
                     name = label_text.strip()
-                    logger.debug(f"Found field name '{name}' via aria-labelledby reference")
+                    logger.debug(
+                        f"Found field name '{name}' via aria-labelledby reference"
+                    )
                     return name
             except Exception as e:
                 logger.warning(f"Failed to get text from aria-labelledby element: {e}")
@@ -123,8 +125,12 @@ class ElementUtils:
                 if parent_text and parent_text.strip():
                     # Clean up the text - remove common form artifacts
                     cleaned_text = self._clean_field_name(parent_text.strip())
-                    if cleaned_text and len(cleaned_text) < 100:  # Reasonable length check
-                        logger.debug(f"Found field name '{cleaned_text}' from parent element text")
+                    if (
+                        cleaned_text and len(cleaned_text) < 100
+                    ):  # Reasonable length check
+                        logger.debug(
+                            f"Found field name '{cleaned_text}' from parent element text"
+                        )
                         return cleaned_text
         except Exception as e:
             logger.debug(f"Failed to get text from parent element: {e}")
@@ -141,7 +147,10 @@ class ElementUtils:
             # Look for meaningful class names
             classes = class_attr.split()
             for cls in classes:
-                if any(keyword in cls.lower() for keyword in ['name', 'email', 'phone', 'address', 'field']):
+                if any(
+                    keyword in cls.lower()
+                    for keyword in ["name", "email", "phone", "address", "field"]
+                ):
                     logger.debug(f"Using class '{cls}' as field name")
                     return cls
 
@@ -152,17 +161,17 @@ class ElementUtils:
         """Clean and extract meaningful field name from text content"""
         if not text:
             return ""
-        
+
         # Remove common form artifacts and clean up
         text = text.replace("*", "").replace(":", "").strip()
-        
+
         # If text contains multiple lines, take the first meaningful line
-        lines = [line.strip() for line in text.split('\n') if line.strip()]
+        lines = [line.strip() for line in text.split("\n") if line.strip()]
         if lines:
             # Take the shortest non-empty line (likely the label)
             text = min(lines, key=len)
-        
+
         # Remove extra whitespace
-        text = ' '.join(text.split())
-        
+        text = " ".join(text.split())
+
         return text
